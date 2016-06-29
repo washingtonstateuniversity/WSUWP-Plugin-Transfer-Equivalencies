@@ -117,6 +117,7 @@ class WSUWP_Transfer_Equivalencies {
 			//'meta_box_cb' => '', // Hmm
 			'show_admin_column' => true,
 			'show_in_rest' => true,
+			'rest_base' => 'institution',
 			'rewrite' => array(
 				'slug' => 'institution',
 			),
@@ -154,6 +155,7 @@ class WSUWP_Transfer_Equivalencies {
 			//'meta_box_cb' => '', // Hmm
 			'show_admin_column' => true,
 			'show_in_rest' => true,
+			'rest_base' => 'subject',
 			'rewrite' => array(
 				'slug' => 'subject',
 			),
@@ -331,7 +333,7 @@ class WSUWP_Transfer_Equivalencies {
 							<input type="number" name="transfer_source_id" placeholder="TransferSourceId" value="" />
 
 							<?php
-								if ( isset( $_POST['submit'] ) && isset( $_POST['transfer_source_id'] ) && is_int( $_POST['transfer_source_id'] ) ) {
+								if ( isset( $_POST['submit'] ) && isset( $_POST['transfer_source_id'] ) ) {
 									$institutions_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution';
 									$institutions = wp_remote_get( $institutions_url );
 
@@ -516,7 +518,7 @@ class WSUWP_Transfer_Equivalencies {
 		}
 
 		if ( isset( $_POST['submit'] ) ) {
-			if ( is_int( $_POST['transfer_source_id'] ) ) {
+			if ( isset( $_POST['transfer_source_id'] ) ) {
 				?><div class="notice notice-success is-dismissible">
 					<p>Successfully imported!</p>
 				</div><?php
