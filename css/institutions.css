@@ -1,0 +1,112 @@
+#institution-index {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	list-style: none;
+	padding: 0 0 1em 0;
+}
+
+#institution-index:before {
+  content: '';
+  width: 100%;
+  order: 1;
+}
+
+#institution-index li {
+	border: 1px solid #bdbdbd;
+	box-sizing: border-box;
+	margin: 0 2px 2px 0;
+	padding: 0;
+	text-align: center;
+}
+
+#institution-index li:nth-child(n+14) {
+	order: 1;
+}
+
+#institution-index li a {
+	color: #981e32;
+	display: block;
+	min-width: 20px;
+	padding: 8px;
+	transition: all .5s ease;
+}
+
+#institution-index li a:hover {
+	background: #981e32;
+	color: #fff;
+}
+
+#institution-index .current {
+	border-color: transparent;
+	cursor: text;
+}
+
+#institution-index .current a,
+#institution-index .current a:hover {
+	background: transparent;
+	color: #717171;
+	pointer-events: none;
+}
+
+.tce_course {
+	display: table-row;
+}
+
+.article-header,
+.tce-internal-course,
+.tce-ucore {
+	display: table-cell;
+}
+
+h2 {
+	font-size: 1em;
+}
+
+.tce-internal-course,
+.tce-ucore {
+	padding-left: 1rem;
+}
+
+.pager.row .column {
+	display: flex;
+	justify-content: center;
+	padding: 2rem 4.4rem;
+}
+
+.page-numbers {
+	border: 1px solid #bdbdbd;
+	box-sizing: border-box;
+	margin: 0 2px 2px 0;
+	min-width: 36px;
+	padding: 8px;
+	transition: all .5s ease;
+}
+
+.page-numbers:hover {
+	background: #981e32;
+	color: #fff;
+}
+
+.current,
+.dots {
+	border-color: transparent;
+}
+
+.current:hover,
+.dots:hover {
+	background: inherit;
+	color: inherit;
+}
+
+.prev {
+	left: 2rem;
+	margin: 0;
+	position: absolute;
+}
+
+.next {
+	margin: 0;
+	position: absolute;
+	right: 2rem;
+}

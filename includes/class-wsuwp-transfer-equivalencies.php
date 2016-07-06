@@ -51,6 +51,10 @@ class WSUWP_Transfer_Equivalencies {
 		add_action( $this->institution_taxonomy_slug . '_edit_form_fields', array( $this, 'institution_term_meta' ), 10, 2 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_notices', array( $this, 'api_testing_notices' ) );
+
+		add_shortcode( 'tce_institution_search', array( $this, 'display_tce_institution_search' ) );
+		add_filter( 'template_include', array( $this, 'template_include' ), 1 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
 	}
 
 	/**
@@ -250,6 +254,8 @@ class WSUWP_Transfer_Equivalencies {
 		$columns['country_code'] = 'Country';
 		$columns['state_code'] = 'State';
 
+		unset( $columns['description'] );
+
 		return $columns;
 	}
 
@@ -329,7 +335,7 @@ class WSUWP_Transfer_Equivalencies {
 					<tr valign="top">
 						<th scope="row">Import</th>
 						<td>
-							<label>Import instutition and its courses by TransferSourceId <em>(note that it will take a moment)</em></label><br />
+							<label>Import institution and its courses by TransferSourceId <em>(note that it will take a moment)</em></label><br />
 							<input type="number" name="transfer_source_id" placeholder="TransferSourceId" value="" />
 
 							<?php
@@ -357,20 +363,24 @@ class WSUWP_Transfer_Equivalencies {
 											// Insert a term and meta data for tracking an institution.
 											$term = wp_insert_term( $institution_name, $this->institution_taxonomy_slug );
 
-											if ( $institution->CountryCode ) {
-												add_term_meta( $term['term_id'], 'country_code', $institution->CountryCode, true );
-											}
+											if ( is_array( $term ) ) {
 
-											if ( $institution->StateCode ) {
-												add_term_meta( $term['term_id'], 'state_code', $institution->StateCode, true );
-											}
+												if ( $institution->CountryCode ) {
+													add_term_meta( $term['term_id'], 'country_code', $institution->CountryCode, true );
+												}
 
-											if ( $institution->TransferSourceId ) {
-												add_term_meta( $term['term_id'], 'transfer_source_id', $institution->TransferSourceId, true );
-											}
+												if ( $institution->StateCode ) {
+													add_term_meta( $term['term_id'], 'state_code', $institution->StateCode, true );
+												}
 
-											// Retrieve courses from this institition and create Course posts for them.
-											$this->retrieve_courses( $institution->TransferSourceId, $institution_name );
+												if ( $institution->TransferSourceId ) {
+													add_term_meta( $term['term_id'], 'transfer_source_id', $institution->TransferSourceId, true );
+												}
+
+												// Retrieve courses from this institition and create Course posts for them.
+												$this->retrieve_courses( $institution->TransferSourceId, $institution_name );
+
+											}
 
 											// Stop.
 											break;
@@ -411,7 +421,7 @@ class WSUWP_Transfer_Equivalencies {
 
 		foreach ( $courses as $course ) {
 
-			if ( 'NON_T NON-T Non-Transfer' === $course->InternalCourses ) {
+			if ( 'NON_T NON-T Non-Transfer' === $course->InternalCourses || '' === $course->InternalCourses ) {
 				continue;
 			}
 
@@ -527,6 +537,59 @@ class WSUWP_Transfer_Equivalencies {
 					<p>Import unsuccessful.</p>
 				</div><?php
 			}
+		}
+	}
+
+	/**
+	 * Display a text input for searching by institution name.
+	 */
+	public function display_tce_institution_search() {
+		ob_start();
+		?>
+		<form role="search" method="get" action="<?php echo home_url( '/' ); ?>">
+			<div>
+				<label class="screen-reader-text" for="instutition-search">Search for:</label>
+				<input type="text" value="" name="institution" id="instutition-search">
+				<input type="submit" value="Search">
+			</div>
+		</form>
+		<?php
+		$html = ob_get_contents();
+
+		ob_end_clean();
+
+		return $html;
+	}
+
+	/**
+	 * Add a template for the transfer equivalencies search page.
+	 *
+	 * @param string $template
+	 *
+	 * @return string template path
+	 */
+	public function template_include( $template ) {
+		if ( is_page( 'equivalencies' ) || isset( $_GET['institution'] ) ) {
+			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/index.php';
+		}
+
+		if ( is_tax( $this->institution_taxonomy_slug ) ) {
+			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/institution.php';
+		}
+
+		if ( is_single() && $this->content_type_slug == get_post_type() ) {
+			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/course.php';
+		}
+
+		return $template;
+	}
+
+	/**
+	 * Enqueue the scripts and styles used on the front end.
+	 */
+	public function wp_enqueue_scripts() {
+		if ( is_page( 'equivalencies' ) || isset( $_GET['institution'] ) || is_tax( $this->institution_taxonomy_slug ) ) {
+			wp_enqueue_style( 'tce-institutions', plugins_url( 'css/institutions.css', dirname( __FILE__ ) ), array( 'spine-theme' ) );
 		}
 	}
 }
