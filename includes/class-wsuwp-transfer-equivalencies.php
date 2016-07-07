@@ -264,7 +264,7 @@ class WSUWP_Transfer_Equivalencies {
 	 * Probably not necessary.
 	 */
 	public function institution_column_content( $content, $column_name, $term_id ) {
-		if ( $column_name === 'country_code' ) {
+		if ( 'country_code' === $column_name ) {
 			$country_code = get_term_meta( absint( $term_id ), 'country_code', true );
 
 			if ( $country_code ) {
@@ -272,7 +272,7 @@ class WSUWP_Transfer_Equivalencies {
 			}
 		}
 
-		if ( $column_name === 'state_code' ) {
+		if ( 'state_code' === $column_name ) {
 			$state_code = get_term_meta( absint( $term_id ), 'state_code', true );
 
 			if ( $state_code ) {
@@ -339,54 +339,54 @@ class WSUWP_Transfer_Equivalencies {
 							<input type="number" name="transfer_source_id" placeholder="TransferSourceId" value="" />
 
 							<?php
-								if ( isset( $_POST['submit'] ) && isset( $_POST['transfer_source_id'] ) ) {
-									$institutions_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution';
-									$institutions = wp_remote_get( $institutions_url );
+							if ( isset( $_POST['submit'] ) && isset( $_POST['transfer_source_id'] ) ) {
+								$institutions_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution';
+								$institutions = wp_remote_get( $institutions_url );
 
-									if ( is_wp_error( $institutions ) ) {
-										return;
-									}
+								if ( is_wp_error( $institutions ) ) {
+									return;
+								}
 
-									$institutions = wp_remote_retrieve_body( $institutions );
-									$institutions = json_decode( $institutions );
+								$institutions = wp_remote_retrieve_body( $institutions );
+								$institutions = json_decode( $institutions );
 
-									if ( ! isset( $institutions->InstitutionResponse->InstResponseComp ) ) {
-										return;
-									}
+								if ( ! isset( $institutions->InstitutionResponse->InstResponseComp ) ) {
+									return;
+								}
 
-									$institutions = $institutions->InstitutionResponse->InstResponseComp;
+								$institutions = $institutions->InstitutionResponse->InstResponseComp;
 
-									foreach ( $institutions as $institution ) {
-										if ( $_POST['transfer_source_id'] === $institution->TransferSourceId ) {
-											$institution_name = str_replace( ',', ' ', $institution->TransferSourceDescr );
+								foreach ( $institutions as $institution ) {
+									if ( $_POST['transfer_source_id'] === $institution->TransferSourceId ) {
+										$institution_name = str_replace( ',', ' ', $institution->TransferSourceDescr );
 
-											// Insert a term and meta data for tracking an institution.
-											$term = wp_insert_term( $institution_name, $this->institution_taxonomy_slug );
+										// Insert a term and meta data for tracking an institution.
+										$term = wp_insert_term( $institution_name, $this->institution_taxonomy_slug );
 
-											if ( is_array( $term ) ) {
+										if ( is_array( $term ) ) {
 
-												if ( $institution->CountryCode ) {
-													add_term_meta( $term['term_id'], 'country_code', $institution->CountryCode, true );
-												}
-
-												if ( $institution->StateCode ) {
-													add_term_meta( $term['term_id'], 'state_code', $institution->StateCode, true );
-												}
-
-												if ( $institution->TransferSourceId ) {
-													add_term_meta( $term['term_id'], 'transfer_source_id', $institution->TransferSourceId, true );
-												}
-
-												// Retrieve courses from this institition and create Course posts for them.
-												$this->retrieve_courses( $institution->TransferSourceId, $institution_name );
-
+											if ( $institution->CountryCode ) {
+												add_term_meta( $term['term_id'], 'country_code', $institution->CountryCode, true );
 											}
 
-											// Stop.
-											break;
+											if ( $institution->StateCode ) {
+												add_term_meta( $term['term_id'], 'state_code', $institution->StateCode, true );
+											}
+
+											if ( $institution->TransferSourceId ) {
+												add_term_meta( $term['term_id'], 'transfer_source_id', $institution->TransferSourceId, true );
+											}
+
+											// Retrieve courses from this institition and create Course posts for them.
+											$this->retrieve_courses( $institution->TransferSourceId, $institution_name );
+
 										}
+
+										// Stop.
+										break;
 									}
 								}
+							}
 							?>
 						</td>
 					</tr>
@@ -546,7 +546,7 @@ class WSUWP_Transfer_Equivalencies {
 	public function display_tce_institution_search() {
 		ob_start();
 		?>
-		<form role="search" method="get" action="<?php echo home_url( '/' ); ?>">
+		<form role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<div>
 				<label class="screen-reader-text" for="instutition-search">Search for:</label>
 				<input type="text" value="" name="institution" id="instutition-search">
@@ -577,7 +577,7 @@ class WSUWP_Transfer_Equivalencies {
 			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/institution.php';
 		}
 
-		if ( is_single() && $this->content_type_slug == get_post_type() ) {
+		if ( is_single() && get_post_type() === $this->content_type_slug ) {
 			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/course.php';
 		}
 

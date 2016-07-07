@@ -23,9 +23,9 @@ get_header();
 
 				<div class="article-body">
 					<?php
-						if ( $note = get_post_meta( $post->ID, '_tce_note', true ) ) {
-							echo esc_html( $note );
-						}
+					if ( $note = get_post_meta( $post->ID, '_tce_note', true ) ) {
+						echo esc_html( $note );
+					}
 					?>
 				</div>
 

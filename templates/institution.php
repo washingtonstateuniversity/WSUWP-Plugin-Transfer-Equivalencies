@@ -32,12 +32,14 @@ get_header();
 			<?php $course = explode( '(', get_post_meta( $post->ID, '_tce_internal_courses', true ) ); ?>
 
 			<div class="tce-internal-course">
-				<p><?php echo $course[0]; ?></p>
+				<p><?php echo esc_html( $course[0] ); ?></p>
 			</div>
 
 			<div class="tce-ucore">
 				<p><?php
-					if ( array_key_exists( 1, $course ) ) echo rtrim( $course[1], ')' );
+				if ( array_key_exists( 1, $course ) ) {
+					echo esc_html( rtrim( $course[1], ')' ) );
+				}
 				?></p>
 			</div>
 
@@ -59,8 +61,8 @@ $args = array(
 	'format'       => 'page/%#%',
 	'total'        => $wp_query->max_num_pages, // Provide the number of pages this query expects to fill.
 	'current'      => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
-	'prev_text'    => __('«'),
-	'next_text'    => __('»'),
+	'prev_text'    => __( '«' ),
+	'next_text'    => __( '»' ),
 );
 ?>
 	<footer class="main-footer archive-footer">

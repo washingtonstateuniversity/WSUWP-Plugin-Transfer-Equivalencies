@@ -32,7 +32,7 @@ get_header();
 				}
 			}
 
-			$slice_start = is_paged() ? ( get_query_var('paged') - 1 ) * $results_per_page : 0;
+			$slice_start = is_paged() ? ( get_query_var( 'paged' ) - 1 ) * $results_per_page : 0;
 			$slice_end = $slice_start + $results_per_page;
 
 			$institutions = array_slice( $institutions, $slice_start, $slice_end );
@@ -43,7 +43,7 @@ get_header();
 				$institutions_args['number'] = $results_per_page;
 
 				if ( is_paged() ) {
-					$institutions_args['offset'] = ( get_query_var('paged') - 1 ) * $results_per_page;
+					$institutions_args['offset'] = ( get_query_var( 'paged' ) - 1 ) * $results_per_page;
 				}
 			}
 
@@ -51,11 +51,11 @@ get_header();
 		}
 
 		if ( isset( $_GET['institution'] ) && empty( $institutions ) ) {
-			?><p>Sorry, we couldn't find any institutions that match <?php echo sanitize_text_field( $_GET['institution'] ); ?>. Please try another search or browse using the A-Z index.</p><?php
+			?><p>Sorry, we couldn't find any institutions that match <?php echo esc_html( $_GET['institution'] ); ?>. Please try another search or browse using the A-Z index.</p><?php
 		}
 		?>
 
-		<form role="search" method="get" action="<?php echo home_url( '/' ); ?>">
+		<form role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<div>
 				<label class="screen-reader-text" for="instutition-search">Search for:</label>
 				<input type="text" value="" name="institution" id="instutition-search">
@@ -67,7 +67,7 @@ get_header();
 		<?php foreach ( range( 'A', 'Z' ) as $index ) { ?>
 			<?php $current = ( isset( $_GET['alpha'] ) && sanitize_text_field( $_GET['alpha'] ) === strtolower( $index ) ) ? ' class="current"' : ''; ?>
 			<?php $url = home_url( 'equivalencies/' ) . '?alpha=' . strtolower( $index ); ?>
-			<li<?php echo $current; ?>><a href="<?php echo esc_url( $url ); ?>"><?php echo $index; ?></a></li>
+			<li<?php echo $current; ?>><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $index ); ?></a></li>
 		<?php } ?>
 		</ul>
 
@@ -106,8 +106,8 @@ if ( ! isset( $_GET['institution'] ) ) {
 		'format'       => 'page/%#%',
 		'total'        => ceil( $total / $results_per_page ), // Provide the number of pages this query expects to fill.
 		'current'      => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
-		'prev_text'    => __('«'),
-		'next_text'    => __('»'),
+		'prev_text'    => __( '«' ),
+		'next_text'    => __( '»' ),
 	);
 	?>
 	<footer class="main-footer archive-footer">
