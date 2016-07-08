@@ -187,30 +187,7 @@ class WSUWP_Transfer_Equivalencies {
 	 * @param WP_Post $post Object for the post currently being edited.
 	 */
 	public function display_transfer_credit_equivalency_meta_box( $post ) {
-		// The following is an example of information returned by the "Courses by Institution" service.
-		// "?"'s denote that I'm not sure what the key means or what its value is used for.
 
-		// Subject				@string	Transfer course subject - possibly store as taxonomy term.
-		// CatalogNumber		@string	Transfer course catalog number - store as meta.
-		// TrCreditRuleCount	@int	? (probably store as meta)
-		// CompSubjectArea 		@string Is this alwasys the same value as Subject? If so, is there any need to store both?
-		// TrEquivalencyComp	@string	? (probably store as meta)
-		// IncomingCourseCount	@int	? (probably store as meta)
-		// IncomingCourse 		@string Transfer course subject and number - store as meta, or posssibly don't and just parse Subject (or CompSubjectArea) and Catalog number.
-		// InternalEquivNbr		@int	? (probably store as meta)
-		// InternalCourses		@string Equivalent course(s) - store as meta.
-		// WildcardRuleCount	@int	? (probably store as meta)
-		// Note					@string	Equivalent course - store as meta.
-
-		// The "Course Rules" service returns the above - often as multiple, similar records with differing
-		// values for some keys ("TrEquivalencyComp", "InternalCourses", Note", possibly others) - but:
-		// without "Subject" and "CatalogNumber" keys;
-		// with a different "WildcardRuleCount" value; and
-		// includes a "TransferPriority" key.
-
-		// TransferPriority		@int	? (probably store as meta)
-
-		// @todo - rename all these to something more intuitive (it will help to know what they are/do), shorten meta keys.
 		$catalog_number = get_post_meta( $post->ID, '_tce_catalog_number', true );
 		$tr_credit_rule_count = get_post_meta( $post->ID, '_tce_tr_credit_rule_count', true );
 		$tr_equivalency_comp = get_post_meta( $post->ID, '_tce_tr_equivalency_comp', true );
@@ -219,12 +196,11 @@ class WSUWP_Transfer_Equivalencies {
 		$internal_courses = get_post_meta( $post->ID, '_tce_internal_courses', true );
 		$wildcard_rule_count = get_post_meta( $post->ID, '_tce_wildcard_rule_count', true );
 		$note = get_post_meta( $post->ID, '_tce_note', true );
-		$transfer_priority = get_post_meta( $post->ID, '_tce_transfer_priority', true );
+		$rules = get_post_meta( $post->ID, '_tce_rules', true );
 
 		// We'll eventually leverage the nonce for additional data to be saved along with the record.
 		wp_nonce_field( 'save-wsu-transfer-meta', '_wsu_transfer_meta_nonce' );
 
-		// I'm not certain there's any reason to show this data on the back end.
 		?>
 		<p><strong>Catalog Number:</strong> <?php if ( $catalog_number ) { echo esc_html( $catalog_number ); } ?></p>
 
@@ -242,8 +218,35 @@ class WSUWP_Transfer_Equivalencies {
 
 		<p><strong>Note:</strong> <?php if ( $note ) { echo esc_html( $note ); } ?></p>
 
-		<p><strong>Transfer Priority:</strong> <?php if ( $transfer_priority ) { echo esc_html( $transfer_priority ); } ?></p>
 		<?php
+		if ( $rules ) {
+			?>
+			<p><strong>Course Rules:</strong></p>
+			<?php
+			foreach ( $rules as $index => $rule ) {
+				?>
+				<ul style="margin-left: 1em;">
+					<?php
+					if ( $rule['equivalency_comp'] ) {
+						?><li><strong>Equivalency Comp:</strong> <?php echo esc_html( $rule['equivalency_comp'] ); ?></li><?php
+					}
+
+					if ( $rule['transfer_priority'] ) {
+						?><li><strong>Transfer Priority:</strong> <?php echo esc_html( $rule['transfer_priority'] ); ?></li><?php
+					}
+
+					if ( $rule['internal_courses'] ) {
+						?><li><strong>Internal Courses</strong> <?php echo esc_html( $rule['internal_courses'] ); ?></li><?php
+					}
+
+					if ( $rule['note'] ) {
+						?><li><strong>Note:</strong> <?php echo esc_html( $rule['note'] ); ?></li><?php
+					}
+					?>
+				</ul>
+				<?php
+			}
+		}
 	}
 
 	/**
@@ -324,7 +327,7 @@ class WSUWP_Transfer_Equivalencies {
 	}
 
 	/**
-	 * A temporary utility to testing recieving data from the myWSU API.
+	 * A temporary utility to test consuming data from the myWSU API.
 	 */
 	public function tce_api_settings() {
 		?>
@@ -337,7 +340,6 @@ class WSUWP_Transfer_Equivalencies {
 						<td>
 							<label>Import institution and its courses by TransferSourceId <em>(note that it will take a moment)</em></label><br />
 							<input type="number" name="transfer_source_id" placeholder="TransferSourceId" value="" />
-
 							<?php
 							if ( isset( $_POST['submit'] ) && isset( $_POST['transfer_source_id'] ) ) {
 								$institutions_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution';
@@ -401,7 +403,36 @@ class WSUWP_Transfer_Equivalencies {
 	 * Retrieval the course records for a given institution.
 	 */
 	public function retrieve_courses( $institution_id, $institution_name ) {
-		// Retrieve all courses from an institute.
+		// The following is an example of information returned by the "Courses by Institution" service.
+		// "?"'s denote that I'm not sure what the key means or what its value is used for.
+
+		// Subject				@string	Transfer course subject				Store as a taxonomy term.
+		// CatalogNumber		@string	Transfer course catalog number		Store as meta.
+		// TrCreditRuleCount	@int	?									Store as meta.
+		// CompSubjectArea 		@string Is this always the same value as Subject? If so, is there any need to store both?
+		// TrEquivalencyComp	@string	?									Store as meta.
+		// IncomingCourseCount	@int	?									Store as meta.
+		// IncomingCourse 		@string Transfer course subject and number	Store as the post title.
+		// InternalEquivNbr		@int	?									Store as meta.
+		// InternalCourses		@string Equivalent course(s)				Store as meta.
+		// WildcardRuleCount	@int	?									Store as meta.
+		// Note					@string	Notes about equivalency				Store as meta.
+
+		// The "Course Rules" service returns (ocassionally multiple sets of) the following.
+		// From what I can gather, the values match "Courses by Institution" values unless otherwise.
+		// We will store them all as meta in the '_tce_rule' array.
+
+		// TrCreditRuleCount
+		// CompSubjectArea
+		// TrEquivalencyComp	Sometimes different
+		// TransferPriority		@int	? (probably store as meta) - unique to the "Course Rules" service
+		// IncomingCourseCount
+		// IncomingCourse
+		// InternalEquivNbr
+		// InternalCourses 		Sometimes different
+		// WildcardRuleCount	Sometimes different
+		// Note					Sometimes different
+
 		$institution_courses_url = 'https://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInstCrse.v1/get/inst/course';
 		$institution_courses_url = add_query_arg( 'TransferSourceId', urlencode( $institution_id ), $institution_courses_url );
 		$institution_courses = wp_remote_get( $institution_courses_url );
@@ -427,6 +458,7 @@ class WSUWP_Transfer_Equivalencies {
 
 			// Build the array of meta data.
 			$transfer_course_meta = array();
+
 			if ( $course->CatalogNumber ) {
 				$transfer_course_meta['_tce_catalog_number'] = $course->CatalogNumber;
 			}
@@ -434,6 +466,10 @@ class WSUWP_Transfer_Equivalencies {
 			if ( $course->TrCreditRuleCount ) {
 				$transfer_course_meta['_tce_tr_credit_rule_count'] = $course->TrCreditRuleCount;
 			}
+
+			//if ( $course->CompSubjectArea ) {
+			//	$transfer_course_meta['_tce_comp_subject_area'] = $course->CompSubjectArea;
+			//}
 
 			if ( $course->TrEquivalencyComp ) {
 				$transfer_course_meta['_tce_tr_equivalency_comp'] = $course->TrEquivalencyComp;
@@ -494,24 +530,56 @@ class WSUWP_Transfer_Equivalencies {
 
 			if ( isset( $rules->CourseRuleResponse->CourseRuleResponseComp ) ) {
 				$rules = $rules->CourseRuleResponse->CourseRuleResponseComp;
+				$course_rules_meta = array();
 
 				foreach ( $rules as $index => $rule ) {
 					// Add rule meta data if it exists for this course.
+					// Some of these are commented out because their values seem to be
+					// the same as those retrieved from the "Courses by Institution" service.
+
+					//if ( $rule->TrCreditRuleCount ) {
+					//	$course_rules_meta[ $index ]['tr_credit_rule_count'] = $rule->TrCreditRuleCount;
+					//}
+
+					//if ( $rule->CompSubjectArea ) {
+					//	$course_rules_meta[ $index ]['comp_subject_area'] = $rule->CompSubjectArea;
+					//}
+
 					if ( $rule->TrEquivalencyComp ) {
-						update_post_meta( $post_id, '_tce_tr_equivalency_comp', $rule->TrEquivalencyComp );
+						$course_rules_meta[ $index ]['equivalency_comp'] = $rule->TrEquivalencyComp;
 					}
 
 					if ( $rule->TransferPriority ) {
-						update_post_meta( $post_id, '_tce_transfer_priority', $rule->TransferPriority );
+						$course_rules_meta[ $index ]['transfer_priority'] = $rule->TransferPriority;
 					}
 
+					//if ( $rule->IncomingCourseCount ) {
+					//	$course_rules_meta[ $index ]['incoming_course_count'] = $rule->IncomingCourseCount;
+					//}
+
+					//if ( $rule->IncomingCourse ) {
+					//	$course_rules_meta[ $index ]['incoming_course'] = $rule->IncomingCourse;
+					//}
+
+					//if ( $rule->InternalEquivNbr ) {
+					//	$course_rules_meta[ $index ]['internal_equiv_nbr'] = $rule->InternalEquivNbr;
+					//}
+
 					if ( $rule->InternalCourses ) {
-						update_post_meta( $post_id, '_tce_internal_courses', $rule->InternalCourses );
+						$course_rules_meta[ $index ]['internal_courses'] = $rule->InternalCourses;
+					}
+
+					if ( $rule->WildcardRuleCount ) {
+						$course_rules_meta[ $index ]['wildcard_rule_count'] = $rule->WildcardRuleCount;
 					}
 
 					if ( $rule->Note ) {
-						update_post_meta( $post_id, '_tce_note', $rule->Note );
+						$course_rules_meta[ $index ]['note'] = $rule->Note;
 					}
+				}
+
+				if ( ! empty( $course_rules_meta ) ) {
+					update_post_meta( $post_id, '_tce_rules', $course_rules_meta );
 				}
 			}
 		}
