@@ -22,6 +22,11 @@ class WSUWP_Transfer_Equivalencies {
 	public $subject_taxonomy_slug = 'tce_subject';
 
 	/**
+	 * @var int 	Slug for tracking the institution taxonomy.
+	 */
+	public $results_per_page = 20;
+
+	/**
 	 * Maintain and return the one instance. Initiate hooks when called the first time.
 	 *
 	 * @since 0.0.1
@@ -51,10 +56,13 @@ class WSUWP_Transfer_Equivalencies {
 		add_action( $this->institution_taxonomy_slug . '_edit_form_fields', array( $this, 'institution_term_meta' ), 10, 2 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_notices', array( $this, 'api_testing_notices' ) );
+		add_action( 'rest_api_init', array( $this, 'register_api_fields' ) );
 
-		add_shortcode( 'tce_institution_search', array( $this, 'display_tce_institution_search' ) );
-		add_filter( 'template_include', array( $this, 'template_include' ), 1 );
+		add_shortcode( 'tce_search', array( $this, 'display_tce_search' ) );
+		add_shortcode( 'tce_interface', array( $this, 'display_tce_interface' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+		add_action( 'wp_ajax_nopriv_tce_navigation', array( $this, 'ajax_callback' ) );
+		add_action( 'wp_ajax_tce_navigation', array( $this, 'ajax_callback' ) );
 	}
 
 	/**
@@ -609,15 +617,71 @@ class WSUWP_Transfer_Equivalencies {
 	}
 
 	/**
+	 * Register the custom meta fields attached to a REST API response containing course data.
+	 */
+	public function register_api_fields() {
+		$args = array(
+			'get_callback' => array( $this, 'get_api_meta_data' ),
+			'update_callback' => null,
+			'schema' => null,
+		);
+
+		// @todo - consider using shorter keys for the REST API response.
+		$fields = array(
+			'_tce_catalog_number',
+			'_tce_tr_credit_rule_count',
+			'_tce_tr_equivalency_comp',
+			'_tce_incoming_course_count',
+			'_tce_internal_equiv_nbr',
+			'_tce_internal_courses',
+			'_tce_wildcard_rule_count',
+			'_tce_note',
+			'_tce_rules',
+		);
+
+		foreach ( $fields as $field_name ) {
+			register_rest_field( $this->content_type_slug, $field_name, $args );
+		}
+	}
+
+	/**
+	 * Return the sanitized value of a post meta field.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array           $object     The current post being processed.
+	 * @param string          $field_name Name of the field being retrieved.
+	 * @param WP_Rest_Request $request    The full current REST request.
+	 *
+	 * @return mixed Meta data associated with the post and field name.
+	 */
+	public function get_api_meta_data( $object, $field_name, $request ) {
+		if ( '_tce_rules' === $field_name ) {
+			/*$data = get_post_meta( $object['id'], $field_name, true );
+			if ( is_array( $data ) ) {
+				$data = array_map( 'esc_html', $data );
+			} else {
+				$data = array();
+			}
+			return $data;*/
+			return '';
+		} else {
+			return esc_html( get_post_meta( $object['id'], $field_name, true ) );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Display a text input for searching by institution name.
 	 */
-	public function display_tce_institution_search() {
+	public function display_tce_search() {
 		ob_start();
 		?>
 		<form role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<div>
-				<label class="screen-reader-text" for="instutition-search">Search for:</label>
-				<input type="text" value="" name="institution" id="instutition-search">
+				<label class="screen-reader-text" for="institution-search">Search for:</label>
+				<input type="text" value="" name="institution" id="institution-search">
 				<input type="submit" value="Search">
 			</div>
 		</form>
@@ -630,34 +694,229 @@ class WSUWP_Transfer_Equivalencies {
 	}
 
 	/**
-	 * Add a template for the transfer equivalencies search page.
-	 *
-	 * @param string $template
-	 *
-	 * @return string template path
+	 * Display an interface for navigating transfer credit equivalencies.
 	 */
-	public function template_include( $template ) {
-		if ( is_page( 'equivalencies' ) || isset( $_GET['institution'] ) ) {
-			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/index.php';
-		}
+	public function display_tce_interface() {
+		ob_start();
 
-		if ( is_tax( $this->institution_taxonomy_slug ) ) {
-			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/institution.php';
-		}
+		get_template_part( 'parts/headers' );
+		?>
+		<section class="row side-right pad-top">
 
-		if ( is_single() && get_post_type() === $this->content_type_slug ) {
-			$template = plugin_dir_path( dirname( __FILE__ ) ) . 'templates/course.php';
-		}
+			<div class="column one padded-left">
 
-		return $template;
+				<nav class="tce-nav-links" role="navigation" aria-label="Alphabetic Index">
+					<ul class="tce-alpha-index">
+					<?php foreach ( range( 'A', 'Z' ) as $index ) { ?>
+						<?php $current = ( isset( $_GET['alpha'] ) && sanitize_text_field( $_GET['alpha'] ) === strtolower( $index ) ) ? ' class="current"' : ''; ?>
+						<?php $url = get_permalink() . strtolower( $index ) . '/'; ?>
+						<li<?php echo $current; ?>><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $index ); ?></a></li>
+					<?php } ?>
+					</ul>
+				</nav>
+
+			</div>
+
+			<div class="column two padded-right">
+
+				<form class="tce-search" role="search" method="get" action="">
+					<label class="screen-reader-text" for="institution-search">Search for an institution:</label>
+					<input type="text" value="" name="institution" id="institution-search">
+					<input type="submit" value="$">
+				</form>
+
+				<a class="tce-all-institutions" href="<?php echo esc_url( get_permalink() ); ?>">All Institutions &raquo;</a>
+
+			</div>
+
+		</section>
+
+		<section class="row single gutter pad-top">
+
+			<div class="column one tce-listings">
+
+				<?php
+					$institutions_args = array(
+						'taxonomy' => $this->institution_taxonomy_slug,
+						'number' => $this->results_per_page,
+					);
+
+					$institutions = get_terms( $institutions_args );
+
+					foreach ( $institutions as $institution ) {
+						$link = get_term_link( $institution );
+						$name = $institution->name;
+						$location = array();
+						$state = ( $state_code = get_term_meta( $institution->term_id, 'state_code', true ) ) ? $location[] = $state_code : '';
+						$country = ( $country_code = get_term_meta( $institution->term_id, 'country_code', true ) ) ? $location[] = $country_code : '';
+						$location = implode( ', ', $location );
+
+						?><p><a href="<?php echo esc_url( $link ); ?>"><?php echo esc_html( $name ); ?></a> <?php echo esc_html( $location ); ?></p><?php
+					}
+				?>
+
+			</div>
+
+		</section>
+
+		<?php
+		$total = wp_count_terms( array( 'taxonomy' => $this->institution_taxonomy_slug ) );
+
+		$big = 99164;
+		$args = array(
+			'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+			'format' => 'page/%#%',
+			'total' => ceil( $total / 20 ), // Provide the number of pages this query expects to fill.
+			'current' => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
+			'prev_text' => __( '«' ),
+			'next_text' => __( '»' ),
+			'type' => 'list'
+		);
+		?>
+		<footer class="main-footer archive-footer">
+			<section class="row single pager prevnext">
+				<div class="column one">
+					<nav class="tce-nav-links" role="navigation" aria-label="Page Nagivation">
+						<?php echo paginate_links( $args ); ?>
+					</nav>
+				</div>
+			</section>
+		</footer>
+
+		<?php
+		get_template_part( 'parts/footers' );
+
+		$html = ob_get_contents();
+
+		ob_end_clean();
+
+		return $html;
 	}
 
 	/**
 	 * Enqueue the scripts and styles used on the front end.
 	 */
 	public function wp_enqueue_scripts() {
-		if ( is_page( 'equivalencies' ) || isset( $_GET['institution'] ) || is_tax( $this->institution_taxonomy_slug ) ) {
-			wp_enqueue_style( 'tce-institutions', plugins_url( 'css/institutions.css', dirname( __FILE__ ) ), array( 'spine-theme' ) );
+		$post = get_post();
+		if ( isset( $post->post_content ) && has_shortcode( $post->post_content, 'tce_interface' ) ) {
+			wp_enqueue_style( 'tce-interface', plugins_url( 'css/tce-interface.css', dirname( __FILE__ ) ), array( 'spine-theme' ) );
+			wp_enqueue_script( 'tce-interface', plugins_url( 'js/tce-interface.js', dirname( __FILE__ ) ), array( 'jquery' ), '', true );
+			wp_localize_script( 'tce-interface', 'tce', array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'page_url' => esc_url( get_permalink() ),
+			) );
 		}
+	}
+
+	/**
+	 * Handle the ajax callback to push content to the transfer credit equivalencies interface.
+	 *
+	 * Might needrefactor to use the REST API.
+	 */
+	public function ajax_callback() {
+		$results_per_page = 20;
+		$results = array();
+
+		// Alphabetic index, pagination, or search results.
+		if ( isset( $_POST['page'] ) ) {
+			$institutions_args = array(
+				'taxonomy' => $this->institution_taxonomy_slug,
+			);
+
+			if ( 'alpha' === $_POST['method'] || 'alphapaged' === $_POST['method'] ) {
+				$alpha_index = get_terms( $institutions_args );
+				$institutions = array();
+				$alpha_total = 0;
+
+				foreach ( $alpha_index as $institution ) {
+					if ( sanitize_text_field( $_POST['page'] ) === strtolower( $institution->name[0] ) ) {
+						$institutions[] = $institution;
+						$alpha_total++;
+					}
+				}
+
+				if ( 'alphapaged' === $_POST['method'] ) {
+					set_query_var( 'paged', sanitize_text_field( $_POST['page'] ) );
+				}
+
+				$slice_start = ( 'alphapaged' === $_POST['method'] ) ? ( $_POST['page'] - 1 ) * $results_per_page : 0;
+				$slice_end = $slice_start + $results_per_page;
+				$institutions = array_slice( $institutions, $slice_start, $slice_end );
+				// Set total for pagination links.
+				$total = $alpha_total;
+			} elseif ( 'paged' === $_POST['method'] ) {
+				$institutions_args['number'] = $results_per_page;
+				$institutions_args['offset'] = ( $_POST['page'] - 1 ) * $results_per_page;
+				$institutions = get_terms( $institutions_args );
+				// Set total for pagination links.
+				$total = wp_count_terms( array(
+					'taxonomy' => $this->institution_taxonomy_slug,
+				) );
+				set_query_var( 'paged', sanitize_text_field( $_POST['page'] ) );
+			}
+
+			// Content results.
+			if ( ! empty( $institutions ) ) {
+				$institution_results = array();
+
+				foreach ( $institutions as $institution ) {
+					$link = get_term_link( $institution );
+					$name = $institution->name;
+					$location = array();
+					$state = ( $state_code = get_term_meta( $institution->term_id, 'state_code', true ) ) ? $location[] = $state_code : '';
+					$country = ( $country_code = get_term_meta( $institution->term_id, 'country_code', true ) ) ? $location[] = $country_code : '';
+					$location = implode( ', ', $location );
+					$institution_results[] = '<p><a href="' . esc_url( $link ) . '">' . esc_html( $name ) . '</a> ' . esc_html( $location ) . '</p>';
+				}
+
+				$results['content'] = implode( $institution_results );
+			} else {
+				$results['content'] = "<p>Sorry, we couldn't find any matching institutions. Please try another search or browse using the A-Z index.</p>";
+			}
+
+			// Updated pagination links.
+			$big = 99164;
+			$pagination_args = array(
+				//'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+				'base' => esc_url( trailingslashit( $_POST['url'] . '%_%' ) ),
+				'format' => 'page/%#%',
+				'total' => ceil( $total / $results_per_page ), // Provide the number of pages this query expects to fill.
+				'current' => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
+				'prev_text' => __( '«' ),
+				'next_text' => __( '»' ),
+				'type' => 'list'
+			);
+
+			$results['pagination_links'] = paginate_links( $pagination_args );
+
+		}
+
+		// search results
+
+		if ( $_POST['courses'] ) {
+			$ajax_args['tax_query'] = array(
+				array(
+					'taxonomy' => $_POST['type'],
+					'field' => 'slug',
+					'terms' => $_POST['term'],
+				),
+			);
+			$ajax_args['posts_per_page'] = -1;
+
+			$posts = new WP_Query( $ajax_args );
+
+			if ( $posts->have_posts() ) {
+				while ( $posts->have_posts() ) {
+					$posts->the_post();
+					load_template( dirname( __FILE__ ) . '/templates/post.php', false );
+				}
+			} else {
+				echo 'Sorry, no Impact Reports match the criteria.';
+			}
+		}
+
+		echo json_encode( $results );
+
+		exit();
 	}
 }
