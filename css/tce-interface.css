@@ -81,7 +81,6 @@
 	margin: 0;
 	padding: 8px 38px 8px 12px;
 	width: 100%;
-	-webkit-appearance: textfield;
 }
 
 .tce-search input[type=text]:focus {
