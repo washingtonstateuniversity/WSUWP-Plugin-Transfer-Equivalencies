@@ -1,3 +1,4 @@
+/* Navigation elements */
 .tce-nav-links ul {
 	display: flex;
 	flex-wrap: wrap;
@@ -131,23 +132,54 @@
 	color: #fff;
 }
 
-.tce_course {
+/* Institution and course listings */
+.tce-listings ul {
+	list-style: none;
+	padding: 0;
+}
+.tce-courses li {
 	display: table-row;
 }
-
-.article-header,
-.tce-internal-course,
-.tce-ucore {
+.tce-courses a,
+.tce-courses span {
 	display: table-cell;
+	padding-bottom: 0.3em;
 }
 
-h2 {
-	font-size: 1em;
-}
-
-.tce-internal-course,
-.tce-ucore {
+.tce-courses span {
 	padding-left: 1rem;
+}
+
+@-webkit-keyframes spin {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(360deg);
+		transform: rotate(360deg);
+	}
+}
+@keyframes spin {
+	0% {
+		-webkit-transform: rotate(0deg);
+		transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(360deg);
+		transform: rotate(360deg);
+	}
+}
+
+.tce-loading {
+	-webkit-animation: spin 1s infinite linear;
+	animation: spin 1s infinite linear;
+	border: 0.25rem solid rgba(113,113,113,0.5);
+	border-radius: 50%;
+	border-top-color: #981e32;
+	height: 2rem;
+	margin: 0 auto;
+	width: 2rem;
 }
 
 @media only screen and (max-width: 693px) {

@@ -66,12 +66,28 @@
 	$('.tce-listings').on('click', 'a', function (e) {
 		e.preventDefault();
 
-		var institution = $(this).data('institution-id'),
-			data = {
+		var data = {
 				action: 'tce_navigation',
-				url: tce.page_url,
-				course: institution
+				institution: $(this).data('institution-id'),
+				subject: $(this).data('subject'),
+				course: $(this).data('course')
 			};
+
+		// Loading animation.
+		$('.tce-listings').html('<div class="tce-loading"></div>');
+
+		// Update the pagination links.
+		$('.pager .tce-nav-links').html('');
+
+		// Make the ajax call.
+		$.post(tce.ajax_url, data, function (response) {
+			var response_data = $.parseJSON(response);
+
+			// Update the content
+			$('.tce-listings').html(response_data.content);
+
+
+		});
 	});
 
 }(jQuery));
