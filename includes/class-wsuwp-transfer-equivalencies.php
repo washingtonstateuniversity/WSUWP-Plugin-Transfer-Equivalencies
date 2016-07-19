@@ -431,13 +431,65 @@ class WSUWP_Transfer_Equivalencies {
 
 			$courses = $courses->InstCourseResponse->InstCourseResponseComp;
 			$results = array();
-			$results[] = '<ul class="tce-courses">';
+			$results[] = '<table class="tce-courses">
+				<thead>
+					<tr>
+						<th>Transfer</th>
+						<th class="tce-wsu-equivalents">WSU Equivalent</th>
+					</tr>
+				</thead>
+				<thead>
+					<tr>
+						<th>Course(s)</th>
+						<th>Course(s)</th>
+						<th>Course Title</th>
+						<th>University Common Requirement</th>
+					</tr>
+				</thead>
+				<tbody>';
 
 			foreach ( $courses as $course ) {
-				$results[] = '<li><strong>' . esc_html( $course->IncomingCourse ) . '</strong> <span class="tce-internal-course">' . esc_html( $course->InternalCourses ) . '</span></li>';
+				if ( '' !== $course->InternalCourses ) {
+					// Parse the value of the 'InternalCourses' key into three different chunks...
+					// Start with blanks and fill them in as we're able.
+					$wsu_course = '';
+					$wsu_title = '';
+					$wsu_ucore = '';
+
+					if ( 'NON_T NON-T Non-Transfer' === $course->InternalCourses ) {
+						$wsu_course = 'NON_T';
+						$wsu_title = 'Non-Transfer';
+					} else {
+						$wsu_info = $course->InternalCourses;
+						$title_end = strlen( $wsu_info );
+
+						// Try to find the course subject and prefix first.
+						$info_exploded = explode( ' ', $wsu_info );
+						if ( is_array( $info_exploded ) ) {
+							$wsu_course = $info_exploded[0] . ' ' . $info_exploded[1];
+						}
+
+						// Try to find if this course fulfills a UCORE requirement.
+						$ucore_start = strpos( $wsu_info, 'UCORE - ' );
+						if ( $ucore_start ) {
+							$wsu_ucore = substr( $wsu_info, $ucore_start + 8, -1 );
+							$title_end = -( strlen( $wsu_ucore ) + 21 );
+						}
+
+						// Remove what we've already found and call what remains the title.
+						$wsu_title = substr( $wsu_info, strlen( $wsu_course ), $title_end );
+					}
+
+					$results[] = '<tr>
+						<td>' . esc_html( $course->IncomingCourse ) . '</td>
+						<td>' . esc_html( $wsu_course ) . '</td>
+						<td>' . esc_html( $wsu_title ) . '</td>
+						<td>' . esc_html( $wsu_ucore ) . '</td>
+					</tr>';
+				}
 			}
 
-			$results[] = '</ul>';
+			$results[] = '</tbody></table>';
 			$results['content'] = implode( $results );
 			$results['pagination_links'] = '';
 		// Build institution browsing results.
