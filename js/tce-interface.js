@@ -3,7 +3,7 @@
 	'use strict';
 
 	// Browsing institutions via page, alphabetic index, or search.
-    var tce_institution_browse = function (e, method, page) {
+	var tce_institution_browse = function (e, method, page) {
 		e.preventDefault();
 
 		var data = {
@@ -29,7 +29,7 @@
 	$('.pager .tce-nav-links').on('click', 'a', function (e) {
 		if ( $('.tce-alpha-index').has('.current').length ) {
 			var method = 'alpha-paged',
-				page = $('.tce-alpha-index .current a').data('index') + ',' + $(this).attr('href').slice(tce.page_url.length + 5, -1);
+				page = $('.tce-alpha-index .current a').html() + ',' + $(this).attr('href').slice(tce.page_url.length + 5, -1);
 		} else if ( $('#tce-institution-search').val().length ) {
 			var method = 'search-paged',
 				page = $('#tce-institution-search').val() + ',' + $(this).attr('href').slice(tce.page_url.length + 5, -1);
@@ -43,14 +43,15 @@
 
 	// Alphabetic index link click handling.
 	$('.tce-alpha-index').on('click', 'a', function (e) {
-		var page = $(this).data('index').toUpperCase(),
+		var page = $(this).html(),
 			link = $(this).parent('li');
 
-		 $('#tce-institution-search').val('');
+		$('#tce-institution-search').val('');
 
 		tce_institution_browse(e, 'alpha', page);
 
 		link.addClass('current').siblings('li').removeClass('current');
+		$('.tce-heading').html('Institutions - ' + page);
 	});
 
 	// Search handling.
@@ -60,6 +61,8 @@
 		$('.tce-alpha-index .current').removeClass('current');
 
 		tce_institution_browse(e, 'search', page);
+
+		$('.tce-heading').html('Search Results for <em>' + page + '</em>');
 	});
 
 	// Institution link click handling.
@@ -84,6 +87,9 @@
 			// Update the content
 			$('.tce-listings').html(response_data.content);
 		});
+
+		// Update the heading
+		$('.tce-heading').html($(this).html() + ' Courses');
 	});
 
 }(jQuery));

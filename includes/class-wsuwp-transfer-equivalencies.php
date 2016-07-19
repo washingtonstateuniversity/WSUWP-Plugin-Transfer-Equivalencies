@@ -288,7 +288,7 @@ class WSUWP_Transfer_Equivalencies {
 				<nav class="tce-nav-links" role="navigation" aria-label="Alphabetic Index">
 					<ul class="tce-alpha-index">
 					<?php foreach ( range( 'A', 'Z' ) as $index ) { ?>
-						<li><a href="#" data-index="<?php echo esc_attr( strtolower( $index ) ); ?>"><?php echo esc_html( $index ); ?></a></li>
+						<li><a href="#"><?php echo esc_html( $index ); ?></a></li>
 					<?php } ?>
 					</ul>
 				</nav>
@@ -305,6 +305,16 @@ class WSUWP_Transfer_Equivalencies {
 
 				<a class="tce-all-institutions" href="<?php echo esc_url( get_permalink() ); ?>">All Institutions &raquo;</a>
 
+			</div>
+
+		</section>
+
+		<section class="row single gutter pad-top">
+
+			<div class="column one">
+				<header>
+					<h2 class="tce-heading">All Institutions</h2>
+				</header>
 			</div>
 
 		</section>
@@ -337,7 +347,7 @@ class WSUWP_Transfer_Equivalencies {
 							$country = ( $country_code = get_post_meta( get_the_ID(), '_tce_country_code', true ) ) ? $location[] = $country_code : '';
 							$location = implode( ', ', $location );
 
-							?><li><a href="<?php the_permalink(); ?>" data-institution-id="<?php echo esc_attr( $id ); ?>"><?php the_title(); ?></a> <?php echo esc_html( $location ); ?></li><?php
+							?><li><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a> <?php echo esc_html( $location ); ?></li><?php
 						}
 						?></ul><?php
 						wp_reset_postdata();
