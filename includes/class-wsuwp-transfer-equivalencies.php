@@ -273,6 +273,8 @@ class WSUWP_Transfer_Equivalencies {
 
 	/**
 	 * Display an interface for navigating transfer credit equivalencies.
+	 *
+	 * This shortcode should be used on a page with the "Blank" template set.
 	 */
 	public function display_tce_interface() {
 		ob_start();
@@ -417,6 +419,7 @@ class WSUWP_Transfer_Equivalencies {
 
 			if ( isset( $_POST['method'] ) && ( 'alpha' === $_POST['method'] || 'alpha-paged' === $_POST['method'] ) ) {
 				$institution_query_args['meta_key'] = '_tce_alpha_key';
+
 				if ( 'alpha-paged' === $_POST['method'] ) {
 					$page = explode( ',', sanitize_text_field( $_POST['page'] ) );
 					$institution_query_args['meta_value'] = $page[0];
@@ -453,7 +456,6 @@ class WSUWP_Transfer_Equivalencies {
 					$state = ( $state_code = get_post_meta( get_the_ID(), '_tce_state_code', true ) ) ? $location[] = $state_code : '';
 					$country = ( $country_code = get_post_meta( get_the_ID(), '_tce_country_code', true ) ) ? $location[] = $country_code : '';
 					$location = implode( ', ', $location );
-
 					$institution_results[] = '<li><a href="' . get_the_permalink() . '" data-institution-id="' . esc_attr( $id ) . '">' . get_the_title() . '</a> ' . esc_html( $location ) . '</li>';
 				}
 
@@ -466,8 +468,8 @@ class WSUWP_Transfer_Equivalencies {
 				$results['content'] = "<p>Sorry, we couldn't find any matching institutions. Please try searching or browsing using the A-Z index.</p>";
 			}
 
-			$big = 99164;
 			// Updated pagination links.
+			$big = 99164;
 			$pagination_args = array(
 				'base' => esc_url( trailingslashit( $_POST['url'] . '%_%' ) ),
 				'format' => 'page/%#%',
@@ -475,85 +477,40 @@ class WSUWP_Transfer_Equivalencies {
 				'current' => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
 				'prev_text' => __( '«' ),
 				'next_text' => __( '»' ),
-				'type' => 'list'
+				'type' => 'list',
 			);
-
 			$results['pagination_links'] = paginate_links( $pagination_args );
 		}
 
 		if ( $_POST['institution'] && is_numeric( $_POST['institution'] ) ) {
-			// Course rules.
-			if ( isset( $_POST['subject'] ) && isset( $_POST['course'] ) ) {
-				$request_url = 'https://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalCrseRule.v1/get/inst/course/rule';
-				$request_url = add_query_arg( array(
-					'TransferSourceId' => sanitize_key( $_POST['institution'] ),
-					'Subject' => strtoupper( sanitize_key( $_POST['subject'] ) ),
-					'Course' => sanitize_key( $_POST['course'] ),
-				), $request_url );
-				$course = wp_remote_get( $request_url );
+			$request_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInstCrse.v1/get/inst/course';
+			$request_url = add_query_arg( array( 'TransferSourceId' => sanitize_key( $_POST['institution'] ) ), $request_url );
+			$courses = wp_remote_get( $request_url );
 
-				if ( is_wp_error( $course ) ) {
-					return;
-				}
-
-				$course = wp_remote_retrieve_body( $course );
-				$course = json_decode( $course );
-
-				if ( ! isset( $course->CourseRuleResponse->CourseRuleResponseComp ) ) {
-					return;
-				}
-
-				$course = $course->CourseRuleResponse->CourseRuleResponseComp;
-
-				$course_results = array();
-
-				foreach ( $course as $rules ) {
-					$results[] = '<h2>' . esc_html( $rules->IncomingCourse ) . '</h2>';
-					$results[] = '<p><strong>TrCreditRuleCount</strong>: ' . esc_html( $rules->TrCreditRuleCount ) . '</p>';
-					$results[] = '<p><strong>TrEquivalencyComp</strong>: ' . esc_html( $rules->TrEquivalencyComp ) . '</p>';
-					$results[] = '<p><strong>IncomingCourseCount</strong>: ' . esc_html( $rules->IncomingCourseCount ) . '</p>';
-					$results[] = '<p><strong>InternalEquivNbr</strong>: ' . esc_html( $rules->InternalEquivNbr ) . '</p>';
-					$results[] = '<p><strong>InternalCourses</strong>: ' . esc_html( $rules->InternalCourses ) . '</p>';
-					$results[] = '<p><strong>WildcardRuleCount</strong>: ' . esc_html( $rules->WildcardRuleCount ) . '</p>';
-					$results[] = '<p><strong>Note</strong>: ' . esc_html( $rules->Note ) . '</p>';
-				}
-			// Institution courses.
-			} else {
-				$request_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInstCrse.v1/get/inst/course';
-				$request_url = add_query_arg( array( 'TransferSourceId' => sanitize_key( $_POST['institution'] ) ), $request_url );
-
-				$courses = wp_remote_get( $request_url );
-
-				if ( is_wp_error( $courses ) ) {
-					return;
-				}
-
-				$courses = wp_remote_retrieve_body( $courses );
-				$courses = json_decode( $courses );
-
-				if ( ! isset( $courses->InstCourseResponse->InstCourseResponseComp ) ) {
-					return;
-				}
-
-				$courses = $courses->InstCourseResponse->InstCourseResponseComp;
-
-				$results = array();
-				$results[] = '<ul class="tce-courses">';
-
-				foreach ( $courses as $course ) {
-					$results[] = '<li><a href="#" data-institution-id="' . esc_attr( $_POST['institution'] ) . '" data-subject="' . esc_attr( $course->Subject ) . '" data-course="' . esc_attr( $course->CatalogNumber ) . '">' . esc_html( $course->IncomingCourse ) . '</a> <span class="tce-internal-course">' . esc_html( $course->InternalCourses ) . '</span></li>';
-				}
-
-				$results[] = '</ul>';
+			if ( is_wp_error( $courses ) ) {
+				return;
 			}
 
-			$results['content'] = implode( $results );
+			$courses = wp_remote_retrieve_body( $courses );
+			$courses = json_decode( $courses );
 
-			// pagination links...
-			//$results['pagination_links'] = '';
+			if ( ! isset( $courses->InstCourseResponse->InstCourseResponseComp ) ) {
+				return;
+			}
+
+			$courses = $courses->InstCourseResponse->InstCourseResponseComp;
+			$results = array();
+			$results[] = '<ul class="tce-courses">';
+
+			foreach ( $courses as $course ) {
+				$results[] = '<li><strong>' . esc_html( $course->IncomingCourse ) . '</strong> <span class="tce-internal-course">' . esc_html( $course->InternalCourses ) . '</span></li>';
+			}
+
+			$results[] = '</ul>';
+			$results['content'] = implode( $results );
 		}
 
-		echo json_encode( $results );
+		echo wp_json_encode( $results );
 
 		exit();
 	}

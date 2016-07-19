@@ -68,15 +68,13 @@
 
 		var data = {
 				action: 'tce_navigation',
-				institution: $(this).data('institution-id'),
-				subject: $(this).data('subject'),
-				course: $(this).data('course')
+				institution: $(this).data('institution-id')
 			};
 
 		// Loading animation.
 		$('.tce-listings').html('<div class="tce-loading"></div>');
 
-		// Update the pagination links.
+		// Remove the pagination links.
 		$('.pager .tce-nav-links').html('');
 
 		// Make the ajax call.
@@ -85,8 +83,6 @@
 
 			// Update the content
 			$('.tce-listings').html(response_data.content);
-
-
 		});
 	});
 
