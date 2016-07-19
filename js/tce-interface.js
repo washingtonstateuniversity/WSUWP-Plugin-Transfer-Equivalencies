@@ -2,94 +2,72 @@
 
 	'use strict';
 
-	// Browsing institutions via page, alphabetic index, or search.
-	var tce_institution_browse = function (e, method, page) {
-		e.preventDefault();
+	// Set up common data for the Ajax call.
+	var data = {
+			action: 'tce_navigation',
+			url: tce.page_url
+		},
+		// Make the Ajax call and update the content accordingly.
+		tce_institution_browse = function (e) {
+			e.preventDefault();
 
-		var data = {
+			// Make the AJAX call.
+			$.post(tce.ajax_url, data, function (response) {
+				var response_data = $.parseJSON(response);
+
+				$('.tce-listings').html(response_data.content); // Update the content.
+				$('.pager .tce-nav-links').html(response_data.pagination_links); // Update the pagination links.
+			});
+
+			// Reset data object.
+			data = {
 				action: 'tce_navigation',
-				url: tce.page_url,
-				method: method,
-				page: page
+				url: tce.page_url
 			};
-
-		// Make the ajax call.
-		$.post(tce.ajax_url, data, function (response) {
-			var response_data = $.parseJSON(response);
-
-			// Update the content
-			$('.tce-listings').html(response_data.content);
-
-			// Update the pagination links.
-			$('.pager .tce-nav-links').html(response_data.pagination_links);
-		});
-	};
+		};
 
 	// Pagination link click handling.
 	$('.pager .tce-nav-links').on('click', 'a', function (e) {
-		if ( $('.tce-alpha-index').has('.current').length ) {
-			var method = 'alpha-paged',
-				page = $('.tce-alpha-index .current a').html() + ',' + $(this).attr('href').slice(tce.page_url.length + 5, -1);
-		} else if ( $('#tce-institution-search').val().length ) {
-			var method = 'search-paged',
-				page = $('#tce-institution-search').val() + ',' + $(this).attr('href').slice(tce.page_url.length + 5, -1);
-		} else {
-			var method = 'paged',
-				page = $(this).attr('href').slice(tce.page_url.length + 5, -1);
+		if ($('.tce-alpha-index').has('.current').length) {
+			data.index = $('.tce-alpha-index .current a').html();
+		} else if ($('#tce-institution-search').val().length) {
+			data.search = $('#tce-institution-search').val();
 		}
 
-		tce_institution_browse(e, method, page);
+		data.page = $(this).attr('href').slice(tce.page_url.length + 5, -1); // Get page number (permalink + 'paged/' - trailing slash).
+
+		tce_institution_browse(e);
 	});
 
 	// Alphabetic index link click handling.
 	$('.tce-alpha-index').on('click', 'a', function (e) {
-		var page = $(this).html(),
-			link = $(this).parent('li');
+		data.index = $(this).html();
 
-		$('#tce-institution-search').val('');
+		tce_institution_browse(e);
 
-		tce_institution_browse(e, 'alpha', page);
-
-		link.addClass('current').siblings('li').removeClass('current');
-		$('.tce-heading').html('Institutions - ' + page);
+		$('.tce-heading').html('Institutions - ' + $(this).html()); // Update the heading.
+		$(this).parent('li').addClass('current').siblings('li').removeClass('current'); // Set current alpha index link.
+		$('#tce-institution-search').val(''); // Remove value from search input.
 	});
 
-	// Search handling.
+	// Search submit handling.
 	$('.tce-search').on('submit', function (e) {
-		var page = $('#tce-institution-search').val();
+		data.search = $('#tce-institution-search').val();
 
-		$('.tce-alpha-index .current').removeClass('current');
+		tce_institution_browse(e);
 
-		tce_institution_browse(e, 'search', page);
-
-		$('.tce-heading').html('Search Results for <em>' + page + '</em>');
+		$('.tce-heading').html('Search Results for <em>' + $('#tce-institution-search').val() + '</em>'); // Update the heading.
+		$('.tce-alpha-index .current').removeClass('current'); // Remove current alpha index link.
 	});
 
 	// Institution link click handling.
 	$('.tce-listings').on('click', 'a', function (e) {
-		e.preventDefault();
+		data.institution = $(this).data('institution-id');
 
-		var data = {
-				action: 'tce_navigation',
-				institution: $(this).data('institution-id')
-			};
+		tce_institution_browse(e);
 
-		// Loading animation.
-		$('.tce-listings').html('<div class="tce-loading"></div>');
-
-		// Remove the pagination links.
-		$('.pager .tce-nav-links').html('');
-
-		// Make the ajax call.
-		$.post(tce.ajax_url, data, function (response) {
-			var response_data = $.parseJSON(response);
-
-			// Update the content
-			$('.tce-listings').html(response_data.content);
-		});
-
-		// Update the heading
-		$('.tce-heading').html($(this).html() + ' Courses');
+		$('.pager .tce-nav-links').html(''); // Remove pagination links.
+		$('.tce-heading').html($(this).html() + ' Courses'); // Update the heading.
+		$('.tce-listings').html('<div class="tce-loading"></div>'); // Loading animation.
 	});
-
 }(jQuery));

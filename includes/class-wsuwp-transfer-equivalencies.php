@@ -347,7 +347,7 @@ class WSUWP_Transfer_Equivalencies {
 							$country = ( $country_code = get_post_meta( get_the_ID(), '_tce_country_code', true ) ) ? $location[] = $country_code : '';
 							$location = implode( ', ', $location );
 
-							?><li><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a> <?php echo esc_html( $location ); ?></li><?php
+							?><li><a href="<?php the_permalink(); ?>" data-institution-id="<?php echo esc_attr( $id ); ?>"><?php the_title(); ?></a> <?php echo esc_html( $location ); ?></li><?php
 						}
 						?></ul><?php
 						wp_reset_postdata();
@@ -412,7 +412,36 @@ class WSUWP_Transfer_Equivalencies {
 	public function ajax_callback() {
 		$results = array();
 
-		if ( isset( $_POST['page'] ) ) {
+		// Build institution courses results.
+		if ( $_POST['institution'] && is_numeric( $_POST['institution'] ) ) {
+			$request_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInstCrse.v1/get/inst/course';
+			$request_url = add_query_arg( array( 'TransferSourceId' => sanitize_key( $_POST['institution'] ) ), $request_url );
+			$courses = wp_remote_get( $request_url );
+
+			if ( is_wp_error( $courses ) ) {
+				return;
+			}
+
+			$courses = wp_remote_retrieve_body( $courses );
+			$courses = json_decode( $courses );
+
+			if ( ! isset( $courses->InstCourseResponse->InstCourseResponseComp ) ) {
+				return;
+			}
+
+			$courses = $courses->InstCourseResponse->InstCourseResponseComp;
+			$results = array();
+			$results[] = '<ul class="tce-courses">';
+
+			foreach ( $courses as $course ) {
+				$results[] = '<li><strong>' . esc_html( $course->IncomingCourse ) . '</strong> <span class="tce-internal-course">' . esc_html( $course->InternalCourses ) . '</span></li>';
+			}
+
+			$results[] = '</ul>';
+			$results['content'] = implode( $results );
+			$results['pagination_links'] = '';
+		// Build institution browsing results.
+		} else {
 			$institution_query_args = array(
 				'orderby' => 'title',
 				'order' => 'ASC',
@@ -421,36 +450,19 @@ class WSUWP_Transfer_Equivalencies {
 
 			);
 
-			if ( isset( $_POST['method'] ) && 'paged' === $_POST['method'] ) {
+			if ( isset( $_POST['index'] ) ) {
+				$institution_query_args['meta_key'] = '_tce_alpha_key';
+				$institution_query_args['meta_value'] = sanitize_text_field( $_POST['index'] );
+			}
+
+			if ( isset( $_POST['search'] ) ) {
+				$institution_query_args['s'] = sanitize_text_field( $_POST['search'] );
+			}
+
+			if ( isset( $_POST['page'] ) ) {
 				$institution_query_args['offset'] = ( $_POST['page'] - 1 ) * $this->results_per_page;
 
 				set_query_var( 'paged', sanitize_text_field( $_POST['page'] ) );
-			}
-
-			if ( isset( $_POST['method'] ) && ( 'alpha' === $_POST['method'] || 'alpha-paged' === $_POST['method'] ) ) {
-				$institution_query_args['meta_key'] = '_tce_alpha_key';
-
-				if ( 'alpha-paged' === $_POST['method'] ) {
-					$page = explode( ',', sanitize_text_field( $_POST['page'] ) );
-					$institution_query_args['meta_value'] = $page[0];
-					$institution_query_args['offset'] = ( $page[1] - 1 ) * $this->results_per_page;
-
-					set_query_var( 'paged', $page[1] );
-				} else {
-					$institution_query_args['meta_value'] = sanitize_text_field( $_POST['page'] );
-				}
-			}
-
-			if ( isset( $_POST['method'] ) && 'search' === $_POST['method'] ) {
-				$institution_query_args['s'] = sanitize_text_field( $_POST['page'] );
-			}
-
-			if ( isset( $_POST['method'] ) && 'search-paged' === $_POST['method'] ) {
-				$page = explode( ',', sanitize_text_field( $_POST['page'] ) );
-				$institution_query_args['s'] = $page[0];
-				$institution_query_args['offset'] = ( $page[1] - 1 ) * $this->results_per_page;
-
-				set_query_var( 'paged', $page[1] );
 			}
 
 			$institution_query = new WP_Query( $institution_query_args );
@@ -478,7 +490,7 @@ class WSUWP_Transfer_Equivalencies {
 				$results['content'] = "<p>Sorry, we couldn't find any matching institutions. Please try searching or browsing using the A-Z index.</p>";
 			}
 
-			// Updated pagination links.
+			// Update the pagination links.
 			$big = 99164;
 			$pagination_args = array(
 				'base' => esc_url( trailingslashit( $_POST['url'] . '%_%' ) ),
@@ -490,34 +502,6 @@ class WSUWP_Transfer_Equivalencies {
 				'type' => 'list',
 			);
 			$results['pagination_links'] = paginate_links( $pagination_args );
-		}
-
-		if ( $_POST['institution'] && is_numeric( $_POST['institution'] ) ) {
-			$request_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInstCrse.v1/get/inst/course';
-			$request_url = add_query_arg( array( 'TransferSourceId' => sanitize_key( $_POST['institution'] ) ), $request_url );
-			$courses = wp_remote_get( $request_url );
-
-			if ( is_wp_error( $courses ) ) {
-				return;
-			}
-
-			$courses = wp_remote_retrieve_body( $courses );
-			$courses = json_decode( $courses );
-
-			if ( ! isset( $courses->InstCourseResponse->InstCourseResponseComp ) ) {
-				return;
-			}
-
-			$courses = $courses->InstCourseResponse->InstCourseResponseComp;
-			$results = array();
-			$results[] = '<ul class="tce-courses">';
-
-			foreach ( $courses as $course ) {
-				$results[] = '<li><strong>' . esc_html( $course->IncomingCourse ) . '</strong> <span class="tce-internal-course">' . esc_html( $course->InternalCourses ) . '</span></li>';
-			}
-
-			$results[] = '</ul>';
-			$results['content'] = implode( $results );
 		}
 
 		echo wp_json_encode( $results );
