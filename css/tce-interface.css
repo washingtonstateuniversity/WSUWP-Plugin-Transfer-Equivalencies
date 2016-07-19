@@ -137,17 +137,13 @@
 	list-style: none;
 	padding: 0;
 }
-.tce-courses li {
-	display: table-row;
-}
-.tce-courses a,
-.tce-courses span {
-	display: table-cell;
-	padding-bottom: 0.3em;
+
+.tce-courses thead tr:first-child {
+	color: #981e32;
 }
 
-.tce-courses span {
-	padding-left: 1rem;
+.tce-courses tbody tr:nth-child(odd) {
+	background-color: #f9f9f9;
 }
 
 @-webkit-keyframes spin {

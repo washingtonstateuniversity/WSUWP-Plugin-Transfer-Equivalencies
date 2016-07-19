@@ -67,7 +67,7 @@
 		tce_institution_browse(e);
 
 		$('.pager .tce-nav-links').html(''); // Remove pagination links.
-		$('.tce-heading').html($(this).html() + ' Courses'); // Update the heading.
+		$('.tce-heading').html($(this).html()); // Update the heading.
 		$('.tce-listings').html('<div class="tce-loading"></div>'); // Loading animation.
 	});
 }(jQuery));

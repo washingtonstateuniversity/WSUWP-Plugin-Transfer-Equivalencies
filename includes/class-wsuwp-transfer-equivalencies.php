@@ -435,10 +435,8 @@ class WSUWP_Transfer_Equivalencies {
 				<thead>
 					<tr>
 						<th>Transfer</th>
-						<th class="tce-wsu-equivalents">WSU Equivalent</th>
+						<th colspan="3">WSU Equivalent</th>
 					</tr>
-				</thead>
-				<thead>
 					<tr>
 						<th>Course(s)</th>
 						<th>Course(s)</th>
@@ -466,18 +464,18 @@ class WSUWP_Transfer_Equivalencies {
 						// Try to find the course subject and prefix first.
 						$info_exploded = explode( ' ', $wsu_info );
 						if ( is_array( $info_exploded ) ) {
-							$wsu_course = $info_exploded[0] . ' ' . $info_exploded[1];
+							$wsu_course = trim( $info_exploded[0] . ' ' . $info_exploded[1] );
 						}
 
 						// Try to find if this course fulfills a UCORE requirement.
 						$ucore_start = strpos( $wsu_info, 'UCORE - ' );
 						if ( $ucore_start ) {
-							$wsu_ucore = substr( $wsu_info, $ucore_start + 8, -1 );
+							$wsu_ucore = trim( substr( $wsu_info, $ucore_start + 8, -1 ) );
 							$title_end = -( strlen( $wsu_ucore ) + 21 );
 						}
 
 						// Remove what we've already found and call what remains the title.
-						$wsu_title = substr( $wsu_info, strlen( $wsu_course ), $title_end );
+						$wsu_title = trim( substr( $wsu_info, strlen( $wsu_course ), $title_end ) );
 					}
 
 					$results[] = '<tr>
