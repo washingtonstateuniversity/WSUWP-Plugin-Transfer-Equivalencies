@@ -256,11 +256,11 @@ class WSUWP_Transfer_Equivalencies {
 
 		ob_start();
 		?>
-		<form role="search" method="get" action="<?php echo esc_url( $atts['page_url'] ); ?>">
+		<form role="search" method="get" action="<?php echo esc_url( $atts['page_url'] ); ?>" class="tce-institution-search">
 			<div>
-				<label class="screen-reader-text" for="tce-institution-search">Search for:</label>
-				<input type="text" value="" name="institution" id="tce-institution-search">
-				<input type="submit" value="Search">
+				<label class="screen-reader-text" for="tce-institution-search">Search for institution by name:</label>
+				<input type="search" value="" name="institution" id="tce-institution-search">
+				<input type="submit" value="$">
 			</div>
 		</form>
 		<?php
@@ -328,7 +328,13 @@ class WSUWP_Transfer_Equivalencies {
 
 			<div class="column one tce-list-header">
 				<header>
-					<h2 class="tce-heading">All Institutions</h2>
+					<h2 class="tce-heading"><?php
+						if ( isset( $_GET['institution'] ) ) {
+							echo 'Search Results for <em>' . esc_html( $_GET['institution'] ) . '</em>';
+						} else {
+							echo 'All Institutions';
+						}
+					?></h2>
 				</header>
 			</div>
 
@@ -422,6 +428,9 @@ class WSUWP_Transfer_Equivalencies {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'page_url' => esc_url( get_permalink() ),
 			) );
+		}
+		if ( isset( $post->post_content ) && has_shortcode( $post->post_content, 'tce_search' ) ) {
+			wp_enqueue_style( 'tce-interface', plugins_url( 'css/tce-search.css', dirname( __FILE__ ) ), array( 'spine-theme' ) );
 		}
 	}
 
