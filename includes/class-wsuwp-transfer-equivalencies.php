@@ -276,11 +276,25 @@ class WSUWP_Transfer_Equivalencies {
 	 *
 	 * This shortcode should be used on a page with the "Blank" template set.
 	 */
-	public function display_tce_interface() {
+	public function display_tce_interface( $atts, $content = null ) {
 		ob_start();
 
 		get_template_part( 'parts/headers' );
-		?>
+
+		if ( $content ) : ?>
+
+		<section class="row single gutter pad-top">
+
+			<div class="column one">
+
+				<?php echo wpautop( $content ); ?>
+
+			</div>
+
+		</section>
+
+		<?php endif; ?>
+
 		<section class="row side-right gutter pad-top">
 
 			<div class="column one">
