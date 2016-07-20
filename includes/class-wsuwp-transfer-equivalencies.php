@@ -144,7 +144,7 @@ class WSUWP_Transfer_Equivalencies {
 						<td>
 							<?php
 							if ( isset( $_POST['submit'] ) ) {
-								/*$institutions = wp_remote_get( 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution' );
+								$institutions = wp_remote_get( 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution' );
 
 								if ( is_wp_error( $institutions ) ) {
 									return;
@@ -189,7 +189,7 @@ class WSUWP_Transfer_Equivalencies {
 
 									// Insert the post.
 									wp_insert_post( $transfer_institution );
-								}*/
+								}
 							} else {
 								?><p>Import transfer institutions.</p><?php
 							}
@@ -353,7 +353,9 @@ class WSUWP_Transfer_Equivalencies {
 					$institution_query = new WP_Query( $institution_query_args );
 
 					if ( $institution_query->have_posts() ) {
-						?><ul><?php
+						?>
+						<ul>
+						<?php
 						while ( $institution_query->have_posts() ) {
 							$institution_query->the_post();
 							$id = ( $id = get_post_meta( get_the_ID(), '_tce_transfer_source_id', true ) ) ? $id : '';
@@ -364,7 +366,9 @@ class WSUWP_Transfer_Equivalencies {
 
 							?><li><a href="<?php the_permalink(); ?>" data-institution-id="<?php echo esc_attr( $id ); ?>"><?php the_title(); ?></a> <?php echo esc_html( $location ); ?></li><?php
 						}
-						?></ul><?php
+						?>
+						</ul>
+						<?php
 						wp_reset_postdata();
 					}
 				?>
@@ -505,8 +509,8 @@ class WSUWP_Transfer_Equivalencies {
 			$results[] = '</tbody></table>';
 			$results['content'] = implode( $results );
 			$results['pagination_links'] = '';
-		// Build institution browsing results.
 		} else {
+			// Build institution browsing results.
 			$institution_query_args = array(
 				'orderby' => 'title',
 				'order' => 'ASC',
