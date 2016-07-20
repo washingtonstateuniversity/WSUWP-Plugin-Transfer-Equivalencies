@@ -11,6 +11,8 @@
 		tce_institution_browse = function (e) {
 			e.preventDefault();
 
+			$('.tce-course-filter').remove(); // Remove course search form.
+
 			// Make the AJAX call.
 			$.post(tce.ajax_url, data, function (response) {
 				var response_data = $.parseJSON(response);
@@ -28,7 +30,7 @@
 
 	// Pagination link click handling.
 	$('.pager .tce-nav-links').on('click', 'a', function (e) {
-		if ($('.tce-alpha-index').has('.current').length) {
+		if ($('.tce-alpha-index').has('.current').length && 'All' !== $('.tce-alpha-index .current a').html()) {
 			data.index = $('.tce-alpha-index .current a').html();
 		} else if ($('#tce-institution-search').val().length) {
 			data.search = $('#tce-institution-search').val();
@@ -37,12 +39,11 @@
 		var $page_number = $(this).attr('href').slice(tce.page_url.length + 5, -1); // Get page number (permalink + 'paged/' - trailing slash).
 
 		data.page = $page_number ? $page_number : '1';
-
 		tce_institution_browse(e);
 	});
 
 	// Alphabetic index link click handling.
-	$('.tce-alpha-index').on('click', 'a', function (e) {
+	$('.tce-alpha-index li:not(.tce-all-institutions)').on('click', 'a', function (e) {
 		data.index = $(this).html();
 
 		tce_institution_browse(e);
@@ -69,7 +70,40 @@
 		tce_institution_browse(e);
 
 		$('.pager .tce-nav-links').html(''); // Remove pagination links.
+		$('#tce-institution-search').val(''); // Remove value from search input.
+		$('.tce-alpha-index .current').removeClass('current'); // Remove current alpha index link.
 		$('.tce-heading').html($(this).html()); // Update the heading.
 		$('.tce-listings').html('<div class="tce-loading"></div>'); // Loading animation.
+		// Add course filter elements.
+		var course_filter = '<form class="tce-course-filter" role="search">' +
+			'<label for="tce-course-filter-input">Search courses:</label>' +
+			'<input type="search" id="tce-course-filter-input" value="" autocomplete="off">' +
+			'</form>';
+		$('.tce-heading').parent('header').after(course_filter);
+	});
+
+	// Prevent course search submit.
+	$('.tce-list-header').on('submit', '.tce-course-filter', function (e) {
+		e.preventDefault();
+	});
+
+	// Course search handling.
+	$('.tce-list-header').on('keyup', 'input[type=search]', function () {
+		var	value = $(this).val(),
+			courses = $('.tce-courses tbody tr');
+
+		if (value.length > 0) {
+			courses.each(function () {
+				var course = $(this);
+
+				if (course.text().toLowerCase().indexOf(value.toLowerCase()) > 0) {
+					course.show('fast');
+				} else {
+					course.hide('fast');
+				}
+			});
+		} else {
+			courses.show('fast');
+		}
 	});
 }(jQuery));

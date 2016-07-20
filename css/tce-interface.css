@@ -2,9 +2,12 @@
 .tce-nav-links ul {
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: center;
 	list-style: none;
 	padding: 0;
+}
+
+.page-numbers {
+	justify-content: center;
 }
 
 .tce-nav-links li {
@@ -13,13 +16,19 @@
 }
 
 .tce-alpha-index:before {
- 	content: '';
+	content: '';
 	width: 100%;
 	order: 1;
 }
 
-.tce-alpha-index li:nth-child(n+14) {
+.tce-alpha-index:after {
+	content: '';
+	width: 38px;
 	order: 1;
+}
+
+.tce-alpha-index li:nth-child(n+15) {
+	order: 2;
 }
 
 .tce-nav-links a,
@@ -68,23 +77,38 @@
 .tce-search {
 	padding: 0;
 	margin: 0 0 2px 0;
+}
+
+.tce-search div {
 	position: relative;
 }
 
-.tce-search input[type=text] {
+.tce-search label,
+.tce-course-filter label[for=tce-course-filter-input] {
+	display: block;
+	font-size: 1em;
+	font-weight: normal;
+	padding: 8px 0 9px 12px;
+}
+
+.tce-search input[type=search],
+.tce-course-filter input[type=search] {
 	background: #fff;
 	border-radius: 0;
 	border: 1px solid #bdbdbd;
 	box-sizing: border-box;
+	color: #717171;
 	font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
 	font-size: 1em;
 	line-height: 1.4em;
 	margin: 0;
-	padding: 8px 38px 8px 12px;
+	padding: 8px 50px 8px 12px;
 	width: 100%;
+	-webkit-appearance: textfield;
 }
 
-.tce-search input[type=text]:focus {
+.tce-search input[type=search]:focus,
+.tce-course-filter input[type=search]:focus {
 	color: #981e32;
 }
 
@@ -117,25 +141,18 @@
 	border-width: 0;
 }
 
-.tce-all-institutions {
-	border: 1px solid #bdbdbd;
-	box-sizing: border-box;
-	display: block;
-	line-height: 1.4em;
-	text-align: center;
-	transition: all .5s ease;
-	padding: 8px;
-}
-
-.tce-all-institutions:hover {
-	background: #981e32;
-	color: #fff;
-}
-
 /* Institution and course listings */
+.tce-heading {
+	padding-top: 0;
+}
+
 .tce-listings ul {
 	list-style: none;
 	padding: 0;
+}
+
+.tce-courses {
+	table-layout: fixed;
 }
 
 .tce-courses thead tr:first-child {
@@ -144,6 +161,26 @@
 
 .tce-courses tbody tr:nth-child(odd) {
 	background-color: #f9f9f9;
+}
+
+/* Course filter elements */
+.tce-course-filter {
+	margin: 0;
+	padding: 0;
+}
+
+.tce-course-filter input[type=search],
+.tce-course-filter label {
+	margin-right: 2rem;
+}
+
+.tce-course-filter input[type=search] {
+	padding: 8px 12px;
+	width: 25%;
+}
+
+.tce-course-filter label {
+	font-weight: normal;
 }
 
 @-webkit-keyframes spin {
@@ -177,13 +214,3 @@
 	margin: 0 auto;
 	width: 2rem;
 }
-
-@media only screen and (max-width: 693px) {
-	.padded-left {
-		padding-right: 2rem;
-	}
-	.padded-right {
-		padding-left: 2rem;
-	}
-}
-

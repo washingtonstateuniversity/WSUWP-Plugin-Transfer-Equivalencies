@@ -281,29 +281,30 @@ class WSUWP_Transfer_Equivalencies {
 
 		get_template_part( 'parts/headers' );
 		?>
-		<section class="row side-right pad-top">
+		<section class="row side-right gutter pad-top">
 
-			<div class="column one padded-left">
+			<div class="column one">
 
 				<nav class="tce-nav-links" role="navigation" aria-label="Alphabetic Index">
 					<ul class="tce-alpha-index">
-					<?php foreach ( range( 'A', 'Z' ) as $index ) { ?>
+						<li class="tce-all-institutions <?php if ( ! isset( $_GET['institution'] ) ) { echo 'current'; } ?>"><a href="<?php echo esc_url( get_permalink() ); ?>">All</a></li>
+						<?php foreach ( range( 'A', 'Z' ) as $index ) { ?>
 						<li><a href="#"><?php echo esc_html( $index ); ?></a></li>
-					<?php } ?>
+						<?php } ?>
 					</ul>
 				</nav>
 
 			</div>
 
-			<div class="column two padded-right">
+			<div class="column two">
 
 				<form class="tce-search" role="search" method="get" action="">
-					<label class="screen-reader-text" for="tce-institution-search">Search for an institution:</label>
-					<input type="text" value="<?php if ( isset( $_GET['institution'] ) ) { echo esc_attr( $_GET['institution'] ); } ?>" id="tce-institution-search">
-					<input type="submit" value="$">
+					<label for="tce-institution-search">Search by institution name:</label>
+					<div>
+						<input type="search" value="<?php if ( isset( $_GET['institution'] ) ) { echo esc_attr( $_GET['institution'] ); } ?>" id="tce-institution-search">
+						<input type="submit" value="$">
+					</div>
 				</form>
-
-				<a class="tce-all-institutions" href="<?php echo esc_url( get_permalink() ); ?>">All Institutions &raquo;</a>
 
 			</div>
 
@@ -311,7 +312,7 @@ class WSUWP_Transfer_Equivalencies {
 
 		<section class="row single gutter pad-top">
 
-			<div class="column one">
+			<div class="column one tce-list-header">
 				<header>
 					<h2 class="tce-heading">All Institutions</h2>
 				</header>
@@ -441,7 +442,7 @@ class WSUWP_Transfer_Equivalencies {
 						<th>Course(s)</th>
 						<th>Course(s)</th>
 						<th>Course Title</th>
-						<th>University Common Requirement</th>
+						<th>UCORE Requirement</th>
 					</tr>
 				</thead>
 				<tbody>';
