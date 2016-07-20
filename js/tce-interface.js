@@ -78,6 +78,9 @@
 		var course_filter = '<form class="tce-course-filter" role="search">' +
 			'<label for="tce-course-filter-input">Search courses:</label>' +
 			'<input type="search" id="tce-course-filter-input" value="" autocomplete="off">' +
+			'<label><input type="radio" name="tce-course-filter-by" value="transfer"> Transfer Course</label>' +
+			'<label><input type="radio" name="tce-course-filter-by" value="internal"> WSU Course</label>' +
+			'<label><input type="radio" name="tce-course-filter-by" value="both" checked="checked"> Both</label>' +
 			'</form>';
 		$('.tce-heading').parent('header').after(course_filter);
 	});
@@ -90,20 +93,36 @@
 	// Course search handling.
 	$('.tce-list-header').on('keyup', 'input[type=search]', function () {
 		var	value = $(this).val(),
+			search_by = $('input[name=tce-course-filter-by]:checked').val(),
 			courses = $('.tce-courses tbody tr');
 
 		if (value.length > 0) {
 			courses.each(function () {
-				var course = $(this);
+				var course = $(this),
+					content_area = course;
 
-				if (course.text().toLowerCase().indexOf(value.toLowerCase()) > 0) {
-					course.show('fast');
-				} else {
+				if ('transfer' === search_by) {
+					content_area = course.find($('td:first-of-type'));
+				}
+
+				if ('internal' === search_by) {
+					content_area = course.find($('td:not(:first-of-type)'));
+				}
+
+				if (content_area.text().toLowerCase().indexOf(value.toLowerCase()) === -1) {
 					course.hide('fast');
+				} else {
+					course.show('fast');
 				}
 			});
 		} else {
 			courses.show('fast');
 		}
+	});
+
+	// Trigger search input keyup when radio button is changed.
+	$('.tce-list-header').on('change', 'input[type=radio]', function () {
+		$('.tce-list-header input[type=search]').trigger('keyup');
+
 	});
 }(jQuery));
