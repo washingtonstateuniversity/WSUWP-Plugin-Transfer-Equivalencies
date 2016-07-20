@@ -34,7 +34,9 @@
 			data.search = $('#tce-institution-search').val();
 		}
 
-		data.page = $(this).attr('href').slice(tce.page_url.length + 5, -1); // Get page number (permalink + 'paged/' - trailing slash).
+		var $page_number = $(this).attr('href').slice(tce.page_url.length + 5, -1); // Get page number (permalink + 'paged/' - trailing slash).
+
+		data.page = $page_number ? $page_number : '1';
 
 		tce_institution_browse(e);
 	});
