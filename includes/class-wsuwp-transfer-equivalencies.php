@@ -143,6 +143,7 @@ class WSUWP_Transfer_Equivalencies {
 						<th scope="row">Import</th>
 						<td>
 							<?php
+							// @codingStandardsIgnoreStart
 							if ( isset( $_POST['submit'] ) ) {
 								$institutions = wp_remote_get( 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInst.v1/get/institution' );
 
@@ -193,6 +194,7 @@ class WSUWP_Transfer_Equivalencies {
 							} else {
 								?><p>Import transfer institutions.</p><?php
 							}
+							// @codingStandardsIgnoreEnd
 							?>
 						</td>
 					</tr>
@@ -287,7 +289,11 @@ class WSUWP_Transfer_Equivalencies {
 
 			<div class="column one">
 
-				<?php echo wpautop( $content ); ?>
+				<?php
+				// @codingStandardsIgnoreStart
+				echo wpautop( $content );
+				// @codingStandardsIgnoreEnd
+				?>
 
 			</div>
 
@@ -329,11 +335,11 @@ class WSUWP_Transfer_Equivalencies {
 			<div class="column one tce-list-header">
 				<header>
 					<h2 class="tce-heading"><?php
-						if ( isset( $_GET['institution'] ) ) {
-							echo 'Search Results for <em>' . esc_html( $_GET['institution'] ) . '</em>';
-						} else {
-							echo 'All Institutions';
-						}
+					if ( isset( $_GET['institution'] ) ) {
+						echo 'Search Results for <em>' . esc_html( $_GET['institution'] ) . '</em>';
+					} else {
+						echo 'All Institutions';
+					}
 					?></h2>
 				</header>
 			</div>
@@ -400,7 +406,11 @@ class WSUWP_Transfer_Equivalencies {
 			<section class="row single pager prevnext pad-ends">
 				<div class="column one">
 					<nav class="tce-nav-links" role="navigation" aria-label="Page Nagivation">
-						<?php echo paginate_links( $args ); ?>
+						<?php
+						// @codingStandardsIgnoreStart
+						echo paginate_links( $args );
+						// @codingStandardsIgnoreEnd
+						?>
 					</nav>
 				</div>
 			</section>
@@ -427,6 +437,7 @@ class WSUWP_Transfer_Equivalencies {
 			wp_localize_script( 'tce-interface', 'tce', array(
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'page_url' => esc_url( get_permalink() ),
+				'nonce' => wp_create_nonce( 'transfer-credit-equivalenices' ),
 			) );
 		}
 		if ( isset( $post->post_content ) && has_shortcode( $post->post_content, 'tce_search' ) ) {
@@ -438,6 +449,8 @@ class WSUWP_Transfer_Equivalencies {
 	 * Handle the ajax callback to push content to the transfer credit equivalencies interface.
 	 */
 	public function ajax_callback() {
+		check_ajax_referer( 'transfer-credit-equivalenices', 'nonce' );
+
 		$results = array();
 
 		// Build institution courses results.

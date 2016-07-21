@@ -5,7 +5,8 @@
 	// Set up common data for the Ajax call.
 	var data = {
 			action: 'tce_navigation',
-			url: tce.page_url
+			url: tce.page_url,
+			nonce: tce.nonce
 		},
 		// Make the Ajax call and update the content accordingly.
 		tce_institution_browse = function (e) {
@@ -24,7 +25,8 @@
 			// Reset data object.
 			data = {
 				action: 'tce_navigation',
-				url: tce.page_url
+				url: tce.page_url,
+				nonce: tce.nonce
 			};
 		};
 
