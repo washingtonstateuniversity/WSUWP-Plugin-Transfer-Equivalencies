@@ -40,8 +40,6 @@ class WSUWP_Transfer_Equivalencies {
 		add_action( 'init', array( $this, 'register_content_type' ), 10 );
 		add_action( 'add_meta_boxes_' . $this->content_type_slug, array( $this, 'add_meta_boxes' ), 10 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-		//add_action( 'rest_api_init', array( $this, 'register_api_fields' ) );
-
 		add_shortcode( 'tce_search', array( $this, 'display_tce_search' ) );
 		add_shortcode( 'tce_interface', array( $this, 'display_tce_interface' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
@@ -203,74 +201,6 @@ class WSUWP_Transfer_Equivalencies {
 			</form>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Register the custom meta fields attached to a REST API response containing course data.
-	 */
-	public function register_api_fields() {
-		$args = array(
-			'get_callback' => array( $this, 'get_api_meta_data' ),
-			'update_callback' => null,
-			'schema' => null,
-		);
-
-		// @todo - consider using shorter keys for the REST API response.
-		$fields = array(
-			'_tce_country_code',
-			'_tce_state_code',
-			'_tce_transfer_source_id',
-		);
-
-		foreach ( $fields as $field_name ) {
-			register_rest_field( $this->content_type_slug, $field_name, $args );
-		}
-	}
-
-	/**
-	 * Return the sanitized value of a post meta field.
-	 *
-	 * @since 0.2.0
-	 *
-	 * @param array           $object     The current post being processed.
-	 * @param string          $field_name Name of the field being retrieved.
-	 * @param WP_Rest_Request $request    The full current REST request.
-	 *
-	 * @return mixed Meta data associated with the post and field name.
-	 */
-	public function get_api_meta_data( $object, $field_name, $request ) {
-		return esc_html( get_post_meta( $object['id'], $field_name, true ) );
-	}
-
-	/**
-	 * Display a text input for searching by institution name.
-	 *
-	 * @param array $atts List of attributes used for the shortcode.
-	 */
-	public function display_tce_search( $atts ) {
-		$atts = shortcode_atts( array(
-			'page_url' => '',
-		), $atts );
-
-		if ( ! $atts['page_url'] ) {
-			return;
-		}
-
-		ob_start();
-		?>
-		<form role="search" method="get" action="<?php echo esc_url( $atts['page_url'] ); ?>" class="tce-institution-search">
-			<div>
-				<label class="screen-reader-text" for="tce-institution-search">Search for institution by name:</label>
-				<input type="search" value="" name="institution" id="tce-institution-search">
-				<input type="submit" value="$">
-			</div>
-		</form>
-		<?php
-		$html = ob_get_contents();
-
-		ob_end_clean();
-
-		return $html;
 	}
 
 	/**
