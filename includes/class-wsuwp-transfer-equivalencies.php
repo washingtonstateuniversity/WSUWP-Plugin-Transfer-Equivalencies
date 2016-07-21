@@ -204,6 +204,37 @@ class WSUWP_Transfer_Equivalencies {
 	}
 
 	/**
+	 * Display a text input for searching by institution name.
+	 *
+	 * @param array $atts List of attributes used for the shortcode.
+	 */
+	public function display_tce_search( $atts ) {
+		$atts = shortcode_atts( array(
+			'page_url' => '',
+		), $atts );
+
+		if ( ! $atts['page_url'] ) {
+			return;
+		}
+
+		ob_start();
+		?>
+		<form role="search" method="get" action="<?php echo esc_url( $atts['page_url'] ); ?>" class="tce-institution-search">
+			<div>
+				<label class="screen-reader-text" for="tce-institution-search">Search for institution by name:</label>
+				<input type="search" value="" name="institution" id="tce-institution-search">
+				<input type="submit" value="$">
+			</div>
+		</form>
+		<?php
+		$html = ob_get_contents();
+
+		ob_end_clean();
+
+		return $html;
+	}
+
+	/**
 	 * Display an interface for navigating transfer credit equivalencies.
 	 *
 	 * This shortcode should be used on a page with the "Blank" template set.
