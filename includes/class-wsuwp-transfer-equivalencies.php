@@ -240,6 +240,11 @@ class WSUWP_Transfer_Equivalencies {
 	 * Display an interface for navigating transfer credit equivalencies.
 	 *
 	 * This shortcode should be used on a page with the "Blank" template set.
+	 *
+	 * @param array  $atts    Arguments passed with the shortcode.
+	 * @param string $content Content passed with the shortcode.
+	 *
+	 * @return string
 	 */
 	public function display_tce_interface( $atts, $content = null ) {
 		ob_start();
