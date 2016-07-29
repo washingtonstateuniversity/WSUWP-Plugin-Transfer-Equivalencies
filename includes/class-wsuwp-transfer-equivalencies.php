@@ -67,15 +67,13 @@ class WSUWP_Transfer_Equivalencies {
 		$args = array(
 			'labels' => $labels,
 			'description' => 'Transfer institutions',
-			'public' => true,
+			'public' => false,
+			'public_queryable' => true,
+			'exclude_from_search' => true,
+			'show_ui' => true,
 			'show_in_admin_bar' => false,
 			'menu_position' => 20,
 			'menu_icon' => 'dashicons-migrate',
-			'rewrite' => array(
-				'slug' => 'institution',
-			),
-			'show_in_rest' => true,
-			'rest_base' => 'institution',
 		);
 
 		register_post_type( $this->content_type_slug, $args );
