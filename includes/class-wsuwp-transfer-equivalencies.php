@@ -383,12 +383,14 @@ class WSUWP_Transfer_Equivalencies {
 			<div class="column one tce-listings">
 
 				<?php
-					$search_input = null;
-					if ( isset( $_GET['institution'] ) ) {
-						$search_input = sanitize_text_field( $_GET['institution'] );
-					}
+				$search_input = null;
+				if ( isset( $_GET['institution'] ) ) {
+					$search_input = sanitize_text_field( $_GET['institution'] );
+				}
 
-					echo $this->institution_query( $search_input );
+				// @codingStandardsIgnoreStart
+				echo $this->institution_query( $search_input );
+				// @codingStandardsIgnoreEnd
 				?>
 
 			</div>
