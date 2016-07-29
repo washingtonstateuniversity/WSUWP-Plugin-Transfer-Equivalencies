@@ -12,9 +12,9 @@ class WSUWP_Transfer_Equivalencies {
 	public $content_type_slug = 'tce_institution';
 
 	/**
-	 * @var int The number of results to show per page.
+	 * @var int Maximum number of pages for a given institution query.
 	 */
-	public $results_per_page = 50;
+	public $max_num_pages;
 
 	/**
 	 * Maintain and return the one instance. Initiate hooks when called the first time.
@@ -233,6 +233,72 @@ class WSUWP_Transfer_Equivalencies {
 	}
 
 	/**
+	 * Build the query for institutions.
+	 *
+	 * @param string	$search		Value from search form input.
+	 * @param string	$index		Alphabetic index.
+	 * @param int		$page		Pagination page number.
+	 *
+	 * @return WP_Query results.
+	 */
+	public function institution_query( $search = null, $index = null, $page = null ) {
+		$results_per_page = 50;
+		$args = array(
+			'post_type' => $this->content_type_slug,
+			'posts_per_page' => $results_per_page,
+			'orderby' => 'title',
+			'order' => 'ASC',
+		);
+
+		if ( isset( $search ) ) {
+			$args['s'] = sanitize_text_field( $search );
+		}
+
+		if ( isset( $index ) ) {
+			$args['meta_key'] = '_tce_alpha_key';
+			$args['meta_value'] = sanitize_text_field( $index );
+		}
+
+		if ( isset( $page ) ) {
+			$args['offset'] = ( (int) sanitize_text_field( $page ) - 1 ) * $results_per_page;
+		}
+
+		$institution_query = new WP_Query( $args );
+
+		if ( $institution_query->have_posts() ) {
+			$institution_results = array();
+			$institution_results[] = '<ul>';
+
+			while ( $institution_query->have_posts() ) {
+				$institution_query->the_post();
+				$id = ( $id = get_post_meta( get_the_ID(), '_tce_transfer_source_id', true ) ) ? $id : '';
+				$location = array();
+
+				if ( $state_code = get_post_meta( get_the_ID(), '_tce_state_code', true ) ) {
+					$location[] = $state_code;
+				}
+
+				if ( $country_code = get_post_meta( get_the_ID(), '_tce_country_code', true ) ) {
+					$location[] = $country_code;
+				}
+
+				$location = implode( ', ', $location );
+				$institution_results[] = '<li><a href="' . get_the_permalink() . '" data-institution-id="' . esc_attr( $id ) . '">' . get_the_title() . '</a> ' . esc_html( $location ) . '</li>';
+			}
+
+			$institution_results[] = '</ul>';
+
+			wp_reset_postdata();
+
+			$this->max_num_pages = $institution_query->max_num_pages;
+
+			return implode( $institution_results );
+		} else {
+			return "<p>Sorry, we couldn't find any matching institutions. Please try searching or browsing using the A-Z index.</p>";
+		}
+	}
+
+	/**
 	 * Display an interface for navigating transfer credit equivalencies.
 	 *
 	 * This shortcode should be used on a page with the "Blank" template set.
@@ -310,38 +376,12 @@ class WSUWP_Transfer_Equivalencies {
 			<div class="column one tce-listings">
 
 				<?php
-					$institution_query_args = array(
-						'post_type' => $this->content_type_slug,
-						'posts_per_page' => $this->results_per_page,
-						'orderby' => 'title',
-						'order' => 'ASC',
-					);
-
+					$search_input = null;
 					if ( isset( $_GET['institution'] ) ) {
-						$institution_query_args['s'] = esc_attr( $_GET['institution'] );
+						$search_input = sanitize_text_field( $_GET['institution'] );
 					}
 
-					$institution_query = new WP_Query( $institution_query_args );
-
-					if ( $institution_query->have_posts() ) {
-						?>
-						<ul>
-						<?php
-						while ( $institution_query->have_posts() ) {
-							$institution_query->the_post();
-							$id = ( $id = get_post_meta( get_the_ID(), '_tce_transfer_source_id', true ) ) ? $id : '';
-							$location = array();
-							$state = ( $state_code = get_post_meta( get_the_ID(), '_tce_state_code', true ) ) ? $location[] = $state_code : '';
-							$country = ( $country_code = get_post_meta( get_the_ID(), '_tce_country_code', true ) ) ? $location[] = $country_code : '';
-							$location = implode( ', ', $location );
-
-							?><li><a href="<?php the_permalink(); ?>" data-institution-id="<?php echo esc_attr( $id ); ?>"><?php the_title(); ?></a> <?php echo esc_html( $location ); ?></li><?php
-						}
-						?>
-						</ul>
-						<?php
-						wp_reset_postdata();
-					}
+					echo $this->institution_query( $search_input );
 				?>
 
 			</div>
@@ -353,7 +393,7 @@ class WSUWP_Transfer_Equivalencies {
 		$args = array(
 			'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
 			'format' => 'page/%#%',
-			'total' => $institution_query->max_num_pages, // Provide the number of pages this query expects to fill.
+			'total' => $this->max_num_pages, // Provide the number of pages this query expects to fill.
 			'current' => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
 			'prev_text' => __( '«' ),
 			'next_text' => __( '»' ),
@@ -492,60 +532,32 @@ class WSUWP_Transfer_Equivalencies {
 			$results['pagination_links'] = '';
 		} else {
 			// Build institution browsing results.
-			$institution_query_args = array(
-				'orderby' => 'title',
-				'order' => 'ASC',
-				'posts_per_page' => $this->results_per_page,
-				'post_type' => $this->content_type_slug,
-
-			);
-
-			if ( isset( $_POST['index'] ) ) {
-				$institution_query_args['meta_key'] = '_tce_alpha_key';
-				$institution_query_args['meta_value'] = sanitize_text_field( $_POST['index'] );
-			}
+			$search_input = null;
+			$index = null;
+			$page = null;
 
 			if ( isset( $_POST['search'] ) ) {
-				$institution_query_args['s'] = sanitize_text_field( $_POST['search'] );
+				$search_input = sanitize_text_field( $_POST['search'] );
 			}
 
-			if ( isset( $_POST['page'] ) ) {
-				$institution_query_args['offset'] = ( $_POST['page'] - 1 ) * $this->results_per_page;
+			if ( isset( $_POST['index'] ) ) {
+				$index = sanitize_text_field( $_POST['index'] );
+			}
+
+			if ( isset( $_POST['page'] ) && is_numeric( $_POST['page'] ) ) {
+				$page = sanitize_text_field( $_POST['page'] );
 
 				set_query_var( 'paged', sanitize_text_field( $_POST['page'] ) );
 			}
 
-			$institution_query = new WP_Query( $institution_query_args );
-
-			if ( $institution_query->have_posts() ) {
-				$institution_results = array();
-				$institution_results[] = '<ul>';
-
-				while ( $institution_query->have_posts() ) {
-					$institution_query->the_post();
-					$id = ( $id = get_post_meta( get_the_ID(), '_tce_transfer_source_id', true ) ) ? $id : '';
-					$location = array();
-					$state = ( $state_code = get_post_meta( get_the_ID(), '_tce_state_code', true ) ) ? $location[] = $state_code : '';
-					$country = ( $country_code = get_post_meta( get_the_ID(), '_tce_country_code', true ) ) ? $location[] = $country_code : '';
-					$location = implode( ', ', $location );
-					$institution_results[] = '<li><a href="' . get_the_permalink() . '" data-institution-id="' . esc_attr( $id ) . '">' . get_the_title() . '</a> ' . esc_html( $location ) . '</li>';
-				}
-
-				$institution_results[] = '</ul>';
-
-				wp_reset_postdata();
-
-				$results['content'] = implode( $institution_results );
-			} else {
-				$results['content'] = "<p>Sorry, we couldn't find any matching institutions. Please try searching or browsing using the A-Z index.</p>";
-			}
+			$results['content'] = $this->institution_query( $search_input, $index, $page );
 
 			// Update the pagination links.
 			$big = 99164;
 			$pagination_args = array(
 				'base' => esc_url( trailingslashit( $_POST['url'] . '%_%' ) ),
 				'format' => 'page/%#%',
-				'total' => $institution_query->max_num_pages, // Provide the number of pages this query expects to fill.
+				'total' => $this->max_num_pages, // Provide the number of pages this query expects to fill.
 				'current' => max( 1, get_query_var( 'paged' ) ), // Provide either 1 or the page number we're on.
 				'prev_text' => __( '«' ),
 				'next_text' => __( '»' ),
