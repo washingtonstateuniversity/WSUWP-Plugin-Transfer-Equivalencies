@@ -207,6 +207,8 @@ class WSUWP_Transfer_Equivalencies {
 	 * Display a text input for searching by institution name.
 	 *
 	 * @param array $atts List of attributes used for the shortcode.
+	 *
+	 * @return string Content to output.
 	 */
 	public function display_tce_search( $atts ) {
 		$atts = shortcode_atts( array(
@@ -214,7 +216,7 @@ class WSUWP_Transfer_Equivalencies {
 		), $atts );
 
 		if ( ! $atts['page_url'] ) {
-			return;
+			return '';
 		}
 
 		ob_start();
@@ -238,6 +240,11 @@ class WSUWP_Transfer_Equivalencies {
 	 * Display an interface for navigating transfer credit equivalencies.
 	 *
 	 * This shortcode should be used on a page with the "Blank" template set.
+	 *
+	 * @param array  $atts    Arguments passed with the shortcode.
+	 * @param string $content Content passed with the shortcode.
+	 *
+	 * @return string
 	 */
 	public function display_tce_interface( $atts, $content = null ) {
 		ob_start();
