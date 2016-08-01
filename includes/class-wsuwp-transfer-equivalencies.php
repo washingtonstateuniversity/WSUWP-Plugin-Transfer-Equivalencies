@@ -465,13 +465,23 @@ class WSUWP_Transfer_Equivalencies {
 		if ( $_POST['institution'] && is_numeric( $_POST['institution'] ) ) {
 			$request_url = 'http://cstst.wsu.edu/PSIGW/RESTListeningConnector/PSFT_HR/TransferCreditEvalInstCrse.v1/get/inst/course';
 			$request_url = add_query_arg( array( 'TransferSourceId' => sanitize_key( $_POST['institution'] ) ), $request_url );
-			$courses = wp_remote_get( $request_url );
 
-			if ( is_wp_error( $courses ) ) {
-				return;
+			$cache_key = md5( $request_url );
+			$courses = wp_cache_get( $cache_key, 'tec_courses' );
+
+			if ( ! $courses ) {
+				$courses = wp_remote_get( $request_url );
+
+				if ( is_wp_error( $courses ) ) {
+					return;
+				}
+
+				$courses = wp_remote_retrieve_body( $courses );
+
+				// Cache remote lookup body for 30 minutes.
+				wp_cache_set( $cache_key, $courses, 'tec_courses', 1800 );
 			}
 
-			$courses = wp_remote_retrieve_body( $courses );
 			$courses = json_decode( $courses );
 
 			if ( ! isset( $courses->InstCourseResponse->InstCourseResponseComp ) ) {
