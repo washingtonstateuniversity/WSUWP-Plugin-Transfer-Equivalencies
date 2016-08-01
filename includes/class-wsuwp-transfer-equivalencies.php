@@ -241,7 +241,7 @@ class WSUWP_Transfer_Equivalencies {
 	 * @param string $index  Alphabetic index.
 	 * @param int    $page   Pagination page number.
 	 *
-	 * @return WP_Query results.
+	 * @return string results.
 	 */
 	public function institution_query( $search = null, $index = null, $page = null ) {
 		$results_per_page = 50;
