@@ -562,7 +562,6 @@ class WSUWP_Transfer_Equivalencies {
 			$results['content'] = $this->institution_query( $search_input, $index, $page );
 
 			// Update the pagination links.
-			$big = 99164;
 			$pagination_args = array(
 				'base' => esc_url( trailingslashit( $_POST['url'] . '%_%' ) ),
 				'format' => 'page/%#%',
