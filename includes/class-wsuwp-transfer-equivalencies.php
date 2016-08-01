@@ -237,9 +237,9 @@ class WSUWP_Transfer_Equivalencies {
 	/**
 	 * Build the query for institutions.
 	 *
-	 * @param string	$search		Value from search form input.
-	 * @param string	$index		Alphabetic index.
-	 * @param int		$page		Pagination page number.
+	 * @param string $search Value from search form input.
+	 * @param string $index  Alphabetic index.
+	 * @param int    $page   Pagination page number.
 	 *
 	 * @return WP_Query results.
 	 */
