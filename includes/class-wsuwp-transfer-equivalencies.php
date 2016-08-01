@@ -237,11 +237,11 @@ class WSUWP_Transfer_Equivalencies {
 	/**
 	 * Build the query for institutions.
 	 *
-	 * @param string	$search		Value from search form input.
-	 * @param string	$index		Alphabetic index.
-	 * @param int		$page		Pagination page number.
+	 * @param string $search Value from search form input.
+	 * @param string $index  Alphabetic index.
+	 * @param int    $page   Pagination page number.
 	 *
-	 * @return WP_Query results.
+	 * @return string results.
 	 */
 	public function institution_query( $search = null, $index = null, $page = null ) {
 		$results_per_page = 50;
@@ -562,7 +562,6 @@ class WSUWP_Transfer_Equivalencies {
 			$results['content'] = $this->institution_query( $search_input, $index, $page );
 
 			// Update the pagination links.
-			$big = 99164;
 			$pagination_args = array(
 				'base' => esc_url( trailingslashit( $_POST['url'] . '%_%' ) ),
 				'format' => 'page/%#%',
