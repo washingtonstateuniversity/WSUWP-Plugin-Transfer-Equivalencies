@@ -494,13 +494,15 @@ class WSUWP_Transfer_Equivalencies {
 				<thead>
 					<tr>
 						<th>Transfer</th>
-						<th colspan="3">WSU Equivalent</th>
+						<th colspan="5">WSU Equivalent</th>
 					</tr>
 					<tr>
 						<th>Course(s)</th>
 						<th>Course(s)</th>
 						<th>Course Title</th>
 						<th>UCORE Requirement</th>
+						<th>Start Date</th>
+						<th>End Date</th>
 					</tr>
 				</thead>
 				<tbody>';
@@ -537,11 +539,30 @@ class WSUWP_Transfer_Equivalencies {
 						$wsu_title = trim( substr( $wsu_info, strlen( $wsu_course ), $title_end ) );
 					}
 
+					// Parse the value of the 'Notes' key into start and end dates.
+					// Start with blanks and fill them in as we're able.
+					$start_date = '';
+					$end_date = '';
+					$note = $course->Note;
+
+					if ( $between = strpos( $note, 'between ' ) ) {
+						$start_date = trim( substr( $note, $between + 8, 10 ) );
+						$end_date = trim( substr( $note, $between + 23, 10 ) );
+					} else if ( $between = strpos( $note, 'after ' ) ) {
+						$extracted_start_date = trim( substr( $note, $between + 6, 10 ) );
+						if ( '1900-01-01' !== $extracted_start_date ) {
+							$start_date = $extracted_start_date;
+						}
+					}
+
+
 					$results[] = '<tr>
 						<td>' . esc_html( $course->IncomingCourse ) . '</td>
 						<td>' . esc_html( $wsu_course ) . '</td>
 						<td>' . esc_html( $wsu_title ) . '</td>
 						<td>' . esc_html( $wsu_ucore ) . '</td>
+						<td>' . esc_html( $start_date ) . '</td>
+						<td>' . esc_html( $end_date ) . '</td>
 					</tr>';
 				}
 			}
