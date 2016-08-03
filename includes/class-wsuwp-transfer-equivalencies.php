@@ -531,8 +531,34 @@ class WSUWP_Transfer_Equivalencies {
 						// Try to find if this course fulfills a UCORE requirement.
 						$ucore_start = strpos( $wsu_info, 'UCORE - ' );
 						if ( $ucore_start ) {
-							$wsu_ucore = trim( substr( $wsu_info, $ucore_start + 8, -1 ) );
-							$title_end = -( strlen( $wsu_ucore ) + 21 );
+							$ucore = trim( substr( $wsu_info, $ucore_start + 8, -1 ) );
+							$title_end = -( strlen( $ucore ) + 21 );
+
+							if ( strpos( $ucore, 'Art' ) ) {
+								$wsu_ucore = '[ARTS]';
+							} elseif ( false !== strpos( $ucore, 'Biological' ) ) {
+								$wsu_ucore = '[BSCI]';
+							} elseif ( false !== strpos( $ucore, 'Capstone' ) ) {
+								$wsu_ucore = '[CAPS]';
+							} elseif ( 'Communication' === $wsu_ucore ) {
+								$wsu_ucore = '[COMM]';
+							} elseif ( false !== strpos( $ucore, 'Diversity' ) ) {
+								$wsu_ucore = '[DIVR]';
+							} elseif ( false !== strpos( $ucore, 'Humanities' ) ) {
+								$wsu_ucore = '[HUM]';
+							} elseif ( false !== strpos( $ucore, 'Physical' ) ) {
+								$wsu_ucore = '[PSCI]';
+							} elseif ( false !== strpos( $ucore, 'Quantitative' ) ) {
+								$wsu_ucore = '[QUAN]';
+							} elseif ( false !== strpos( $ucore, 'Roots' ) ) {
+								$wsu_ucore = '[ROOT]';
+							} elseif ( false !== strpos( $ucore, 'Social' ) ) {
+								$wsu_ucore = '[SSCI]';
+							} elseif ( false !== strpos( $ucore, 'Written' ) ) {
+								$wsu_ucore = '[WRTG]';
+							}
+
+							$wsu_ucore .= ' ' . $ucore;
 						}
 
 						// Remove what we've already found and call what remains the title.
