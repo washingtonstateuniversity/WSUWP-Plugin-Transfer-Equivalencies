@@ -493,16 +493,16 @@ class WSUWP_Transfer_Equivalencies {
 			$results[] = '<table class="tce-courses">
 				<thead>
 					<tr>
-						<th>Transfer</th>
-						<th colspan="5">WSU Equivalent</th>
+						<th><span>Transfer</span></th>
+						<th colspan="5"><span>WSU Equivalent</span></th>
 					</tr>
-					<tr>
-						<th>Course(s)</th>
-						<th>Course(s)</th>
-						<th>Course Title</th>
-						<th>UCORE Requirement</th>
-						<th>Start Date</th>
-						<th>End Date</th>
+					<tr class="tce-column-headings">
+						<th><a href="#">Course(s)</a></th>
+						<th><a href="#">Course(s)</a></th>
+						<th><a href="#">Course Title</a></th>
+						<th><a href="#">UCORE Requirement</a></th>
+						<th><a href="#">Start Date</a></th>
+						<th><a href="#">End Date</a></th>
 					</tr>
 				</thead>
 				<tbody>';

@@ -66,7 +66,7 @@
 	});
 
 	// Institution link click handling.
-	$('.tce-listings').on('click', 'a', function (e) {
+	$('.tce-listings').on('click', 'li a', function (e) {
 		data.institution = $(this).data('institution-id');
 
 		tce_institution_browse(e);
@@ -126,5 +126,34 @@
 	$('.tce-list-header').on('change', 'input[type=radio]', function () {
 		$('.tce-list-header input[type=search]').trigger('keyup');
 
+	});
+
+	// Institution courses table sorting.
+	$('.tce-listings').on('click', '.tce-column-headings a', function (e) {
+		e.preventDefault();
+
+		var link = $(this),
+			index = $('.tce-column-headings th').index(link.closest('th')),
+			equivalencies = $('.tce-courses tbody tr');
+
+		if (link.hasClass('sorted')) {
+			link.toggleClass('asc');
+		} else {
+			$('.tce-column-headings a').removeClass('sorted asc');
+			link.addClass('sorted');
+		}
+
+		equivalencies.sort(function (a, b) {
+			var column_a = $(a).find('td:eq(' + index + ')').text().toUpperCase(),
+				column_b = $(b).find('td:eq(' + index + ')').text().toUpperCase();
+
+			if (link.hasClass('asc')) {
+				return column_a < column_b ? 1 : column_a > column_b ? -1 : 0;
+			}
+
+			return column_a > column_b ? 1 : column_a < column_b ? -1 : 0;
+		});
+
+		equivalencies.detach().appendTo($('.tce-courses tbody'));
 	});
 }(jQuery));
