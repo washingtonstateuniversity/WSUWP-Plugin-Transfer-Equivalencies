@@ -567,17 +567,25 @@ class WSUWP_Transfer_Equivalencies {
 
 					// Parse the value of the 'Notes' key into start and end dates.
 					// Start with blanks and fill them in as we're able.
+					$start_date_data = '';
 					$start_date = '';
+					$end_date_data = '';
 					$end_date = '';
 					$note = $course->Note;
 
 					if ( $between = strpos( $note, 'between ' ) ) {
-						$start_date = trim( substr( $note, $between + 8, 10 ) );
-						$end_date = trim( substr( $note, $between + 23, 10 ) );
+						$start_date_data = trim( substr( $note, $between + 8, 10 ) );
+						$start_date_pieces = explode( '-', $start_date_data );
+						$start_date = $start_date_pieces[1] . '/' . $start_date_pieces[2] . '/' . $start_date_pieces[0];
+						$end_date_data = trim( substr( $note, $between + 23, 10 ) );
+						$end_date_pieces = explode( '-', $end_date_data );
+						$end_date = $end_date_pieces[1] . '/' . $end_date_pieces[2] . '/' . $end_date_pieces[0];
 					} else if ( $between = strpos( $note, 'after ' ) ) {
 						$extracted_start_date = trim( substr( $note, $between + 6, 10 ) );
 						if ( '1900-01-01' !== $extracted_start_date ) {
-							$start_date = $extracted_start_date;
+							$start_date_data = $extracted_start_date;
+							$date_pieces = explode( '-', $start_date_data );
+							$start_date = $date_pieces[1] . '/' . $date_pieces[2] . '/' . $date_pieces[0];
 						}
 					}
 
@@ -587,8 +595,8 @@ class WSUWP_Transfer_Equivalencies {
 						<td>' . esc_html( $wsu_course ) . '</td>
 						<td>' . esc_html( $wsu_title ) . '</td>
 						<td>' . esc_html( $wsu_ucore ) . '</td>
-						<td>' . esc_html( $start_date ) . '</td>
-						<td>' . esc_html( $end_date ) . '</td>
+						<td data-date="' . esc_attr( $start_date_data ) . '">' . esc_html( $start_date ) . '</td>
+						<td data-date="' . esc_attr( $end_date_data ) . '">' . esc_html( $end_date ) . '</td>
 					</tr>';
 				}
 			}

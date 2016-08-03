@@ -147,6 +147,12 @@
 			var column_a = $(a).find('td:eq(' + index + ')').text().toUpperCase(),
 				column_b = $(b).find('td:eq(' + index + ')').text().toUpperCase();
 
+			// Use the `data-date` attribute value for sorting the date columns.
+			if ( 4 === index || 5 === index) {
+				column_a = $(a).find('td:eq(' + index + ')').data('date');
+				column_b = $(b).find('td:eq(' + index + ')').data('date');
+			}
+
 			if (link.hasClass('asc')) {
 				return column_a < column_b ? 1 : column_a > column_b ? -1 : 0;
 			}
