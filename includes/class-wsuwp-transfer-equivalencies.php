@@ -589,7 +589,6 @@ class WSUWP_Transfer_Equivalencies {
 						}
 					}
 
-
 					$results[] = '<tr>
 						<td>' . esc_html( $course->IncomingCourse ) . '</td>
 						<td>' . esc_html( $wsu_course ) . '</td>
