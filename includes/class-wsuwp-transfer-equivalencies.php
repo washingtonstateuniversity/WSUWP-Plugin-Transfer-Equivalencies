@@ -493,14 +493,16 @@ class WSUWP_Transfer_Equivalencies {
 			$results[] = '<table class="tce-courses">
 				<thead>
 					<tr>
-						<th>Transfer</th>
-						<th colspan="3">WSU Equivalent</th>
+						<th><span>Transfer</span></th>
+						<th colspan="5"><span>WSU Equivalent</span></th>
 					</tr>
-					<tr>
-						<th>Course(s)</th>
-						<th>Course(s)</th>
-						<th>Course Title</th>
-						<th>UCORE Requirement</th>
+					<tr class="tce-column-headings">
+						<th><a href="#">Course(s)</a></th>
+						<th><a href="#">Course(s)</a></th>
+						<th><a href="#">Course Title</a></th>
+						<th><a href="#">UCORE Requirement</a></th>
+						<th><a href="#">Start Date</a></th>
+						<th><a href="#">End Date</a></th>
 					</tr>
 				</thead>
 				<tbody>';
@@ -529,12 +531,62 @@ class WSUWP_Transfer_Equivalencies {
 						// Try to find if this course fulfills a UCORE requirement.
 						$ucore_start = strpos( $wsu_info, 'UCORE - ' );
 						if ( $ucore_start ) {
-							$wsu_ucore = trim( substr( $wsu_info, $ucore_start + 8, -1 ) );
-							$title_end = -( strlen( $wsu_ucore ) + 21 );
+							$ucore = trim( substr( $wsu_info, $ucore_start + 8, -1 ) );
+							$title_end = -( strlen( $ucore ) + 21 );
+
+							if ( strpos( $ucore, 'Art' ) ) {
+								$wsu_ucore = '[ARTS]';
+							} elseif ( false !== strpos( $ucore, 'Biological' ) ) {
+								$wsu_ucore = '[BSCI]';
+							} elseif ( false !== strpos( $ucore, 'Capstone' ) ) {
+								$wsu_ucore = '[CAPS]';
+							} elseif ( 'Communication' === $wsu_ucore ) {
+								$wsu_ucore = '[COMM]';
+							} elseif ( false !== strpos( $ucore, 'Diversity' ) ) {
+								$wsu_ucore = '[DIVR]';
+							} elseif ( false !== strpos( $ucore, 'Humanities' ) ) {
+								$wsu_ucore = '[HUM]';
+							} elseif ( false !== strpos( $ucore, 'Physical' ) ) {
+								$wsu_ucore = '[PSCI]';
+							} elseif ( false !== strpos( $ucore, 'Quantitative' ) ) {
+								$wsu_ucore = '[QUAN]';
+							} elseif ( false !== strpos( $ucore, 'Roots' ) ) {
+								$wsu_ucore = '[ROOT]';
+							} elseif ( false !== strpos( $ucore, 'Social' ) ) {
+								$wsu_ucore = '[SSCI]';
+							} elseif ( false !== strpos( $ucore, 'Written' ) ) {
+								$wsu_ucore = '[WRTG]';
+							}
+
+							$wsu_ucore .= ' ' . $ucore;
 						}
 
 						// Remove what we've already found and call what remains the title.
 						$wsu_title = trim( substr( $wsu_info, strlen( $wsu_course ), $title_end ) );
+					}
+
+					// Parse the value of the 'Notes' key into start and end dates.
+					// Start with blanks and fill them in as we're able.
+					$start_date_data = '';
+					$start_date = '';
+					$end_date_data = '';
+					$end_date = '';
+					$note = $course->Note;
+
+					if ( $between = strpos( $note, 'between ' ) ) {
+						$start_date_data = trim( substr( $note, $between + 8, 10 ) );
+						$start_date_pieces = explode( '-', $start_date_data );
+						$start_date = $start_date_pieces[1] . '/' . $start_date_pieces[2] . '/' . $start_date_pieces[0];
+						$end_date_data = trim( substr( $note, $between + 23, 10 ) );
+						$end_date_pieces = explode( '-', $end_date_data );
+						$end_date = $end_date_pieces[1] . '/' . $end_date_pieces[2] . '/' . $end_date_pieces[0];
+					} else if ( $between = strpos( $note, 'after ' ) ) {
+						$extracted_start_date = trim( substr( $note, $between + 6, 10 ) );
+						if ( '1900-01-01' !== $extracted_start_date ) {
+							$start_date_data = $extracted_start_date;
+							$date_pieces = explode( '-', $start_date_data );
+							$start_date = $date_pieces[1] . '/' . $date_pieces[2] . '/' . $date_pieces[0];
+						}
 					}
 
 					$results[] = '<tr>
@@ -542,6 +594,8 @@ class WSUWP_Transfer_Equivalencies {
 						<td>' . esc_html( $wsu_course ) . '</td>
 						<td>' . esc_html( $wsu_title ) . '</td>
 						<td>' . esc_html( $wsu_ucore ) . '</td>
+						<td data-date="' . esc_attr( $start_date_data ) . '">' . esc_html( $start_date ) . '</td>
+						<td data-date="' . esc_attr( $end_date_data ) . '">' . esc_html( $end_date ) . '</td>
 					</tr>';
 				}
 			}

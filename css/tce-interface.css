@@ -151,12 +151,53 @@
 	padding: 0;
 }
 
-.tce-courses {
-	table-layout: fixed;
+.tce-courses thead tr:first-child span {
+	display: flex;
 }
 
-.tce-courses thead tr:first-child {
-	color: #981e32;
+.tce-courses thead tr:first-child span:after {
+	background-color: #bdbdbd;
+	content: '\a0';
+	flex-grow: 1;
+	height: 1px;
+	margin: 0 0.5em;
+	position: relative;
+	top: 0.8em;
+}
+
+.tce-column-headings th:first-of-type,
+.tce-column-headings th:nth-of-type(2) {
+	width: 6rem;
+}
+
+.tce-column-headings th:nth-of-type(5),
+.tce-column-headings th:last-of-type {
+	width: 5.55rem;
+}
+
+.tce-column-headings th a:hover:after,
+.tce-column-headings th .sorted:after {
+	border: solid transparent;
+	border-width: 0.6em 0.4em;
+	border-top-color: #c60c30;
+	content: ' ';
+	margin-left: 0.5em;
+	margin-top: 7px;
+	position: absolute;
+}
+
+.tce-column-headings th .sorted:after {
+	border-top-color: #981e32;
+}
+
+.tce-column-headings th .sorted.asc:after {
+	border-bottom-color: #981e32;
+	border-top-color: transparent;
+	margin-top: 0;
+}
+
+.tce-column-headings th .sorted.asc:hover:after {
+	border-bottom-color: #c60c30;
 }
 
 .tce-courses tbody tr:nth-child(odd) {
